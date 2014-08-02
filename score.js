@@ -1,3 +1,5 @@
+"use strict";
+
 (function() {
 	var mouseDrag = false;
 
@@ -68,10 +70,81 @@
 		var x = e.pageX;
 		var y = e.pageY;
 		$(window).unbind("mousemove");
-		// find corresponding SVG
-		findSVG(x, y);
-		var coord = findCoord(x, y);
+		// find corresponding SVG (calls findCoord)
+		var coord = findSVG(x, y);
+		createAnnotation(coord);
 		$("#selectBox").remove();
+	}
+
+	function createAnnotation(coord) {
+		// Once server side stuff is implemented uncomment this
+		// $(".annotationcreator").remove();
+		var annotation = document.createElement("div");
+		annotation.classList.add("annotationcreator");
+		annotation.style.left = coord.x + "px";
+		var textarea = document.createElement("textarea");
+		$(textarea).keyup(function() {
+			if (textarea.value.length) {
+				$(submit).css("backgroundColor", "");
+				submit.classList.add("annotationsubmitvalid");
+			} else {
+				var fullColor = $(submit).css("backgroundColor");
+				var falseColor = "rgba" + fullColor.slice(3, fullColor.length - 1) + ", 0.4)";
+				$(submit).css("backgroundColor", falseColor);
+				submit.classList.remove("annotationsubmitvalid");
+			}
+		});
+		annotation.appendChild(textarea);
+		var categories = document.createElement("div");
+		categories.classList.add("categories");
+		annotation.appendChild(categories);
+		var submit = document.createElement("div");
+		submit.classList.add("annotationsubmit");
+		submit.innerHTML = "Submit";
+		annotation.appendChild(submit);
+		var melody = document.createElement("div");
+		var harmony = document.createElement("div");
+		var rhythm = document.createElement("div");
+		var form = document.createElement("div");
+		var none = document.createElement("div");
+		var catArray = ["melody", "harmony", "rhythm", "form", "none"];
+		var catVarArray = [melody, harmony, rhythm, form, none];
+		for (var i = 0; i < catVarArray.length; i++) {
+			catVarArray[i].innerHTML = catArray[i].charAt(0).toUpperCase() + catArray[i].slice(1);
+			catVarArray[i].classList.add(catArray[i]);
+			catVarArray[i].classList.add("category");
+			$(catVarArray[i]).hover(function() {
+				this.classList.remove("categoryclear");
+				this.classList.add("categoryvalid");
+			}, function() {
+				this.classList.remove("categoryvalid");
+				this.classList.add("categoryclear");
+			});
+			$(catVarArray[i]).click(function(e) {
+				var doubleCat = false;
+				if (!e.metaKey) {
+					doubleCat = true;
+				};
+				for (var j = 0; j < catArray.length; j++) {
+					submit.classList.remove(catArray[j]);
+				};
+				$(submit).css("backgroundColor", ""); // inherits styling from stylesheet instead
+				submit.classList.add(this.innerHTML.charAt(0).toLowerCase() + this.innerHTML.slice(1));
+				if (!textarea.value.length) {
+					var fullColor = $(submit).css("backgroundColor");
+					var falseColor = "rgba" + fullColor.slice(3, fullColor.length - 1) + ", 0.4)";
+					$(submit).css("backgroundColor", falseColor);
+				};
+			});
+			categories.appendChild(catVarArray[i]);
+		};
+
+		var containingDiv = "#" + coord.staveNote.location.clef + "_" + coord.staveNote.location.lineNum;
+		if (!parseInt($(containingDiv).css("height"))) {
+			// TODO: height shouldn't be hard-coded
+			$(containingDiv).css("height", 140);
+		};
+		$(annotation).appendTo(containingDiv); 
 	}
 
 	function findSVGRange(downX, downY, upX, upY) {
@@ -93,18 +166,25 @@
 
 	function findCoord(x, y) {
 		for (var i = 0; i < coords.length; i++) {
-			var marker = document.createElement("div");
-			marker.style.border = "1px solid pink";
-			marker.style.position = "absolute";
-			marker.style.left = coords[i].x + "px";
-			marker.style.top = coords[i].y + "px";
-			marker.style.height = (coords[i].h) + "px";
-			marker.style.width = (coords[i].w) + "px"
-			//$(marker).appendTo("#score");
-			if (x >= coords[i].x && x <= coords[i].x + coords[i].w
-				&& y >= coords[i].y && y <= coords[i].y + coords[i].h) {
-				// console.log(coords[i]);
-				return coords[i];
+			for (var j = 0; j < coords[i].staveNote.note_heads.length; j++) {
+				// note_head coordinates not accurate?!?!?!
+				var left = coords[i].staveNote.note_heads[j].x + coords[i].staveNote.context.paper.canvas.offsetLeft - 2;
+				if (coords[i].staveNote.note_heads[j].displaced) left += 10;
+				var right = left + coords[i].staveNote.note_heads[j].width + 4;
+				var top = coords[i].staveNote.note_heads[j].y + coords[i].staveNote.context.paper.canvas.offsetTop - 7;
+				var bottom = top + 12;
+				var marker = document.createElement("div");
+				marker.style.border = "1px solid pink";
+				marker.style.position = "absolute";
+				marker.style.left = left + "px";
+				marker.style.top = top + "px";
+				marker.style.height = (bottom - top) + "px";
+				marker.style.width = (right - left) + "px"
+				//$(marker).appendTo("#score");
+				if (left < x && right > x && top < y && bottom > y) {
+					console.log(coords[i]);
+					return coords[i];
+				};
 			};
 		}; 
 	}
@@ -115,48 +195,69 @@
 
 	});
 
+	function noteMatch(pathIndex, coord) {
+		var neighborHeads = coord.staveNote.note_heads;
+		var paths = $("path");
+		var lastIndex = -1;
+		var numAccidentals = 0;
+		for (var n = 0; n < neighborHeads.length; n++) {
+			var left = neighborHeads[n].x + coord.staveNote.context.paper.canvas.offsetLeft - 2;
+			if (neighborHeads[n].displaced) left += 10;
+			var right = left + neighborHeads[n].width + 4;
+			var top = neighborHeads[n].y + coord.staveNote.context.paper.canvas.offsetTop - 7;
+			var bottom = top + 12;
+			var verticalCenter = (top + bottom) / 2;
+			var horizontalCenter = (left + right) / 2;
+			if (coord.staveNote.keyProps[n].accidental && coord.staveNote.keyProps[n].accidental.length) numAccidentals++;
+			var closest = 20;
+			var closestPath;
+			pathIndex = (pathIndex < 10) ? 10 : pathIndex;
+			pathIndex = (pathIndex + 10 >= paths.length) ? (paths.length - 11) : pathIndex;
+			for (var i = pathIndex - 10; i < pathIndex + 10; i++) {
+				var bb = paths[i].getBoundingClientRect();
+				var pathTop = parseInt(bb.top + window.scrollY);
+				var pathLeft = parseInt(bb.left + window.scrollX);
+				var pathBottom = parseInt(bb.bottom + window.scrollY);
+				var pathRight = parseInt(bb.right + window.scrollX);
+				if (pathRight - pathLeft > 8 && pathRight - pathLeft < 15) {
+					var horizontalPathCenter = (pathLeft + pathRight) / 2;
+					var verticalPathCenter = (pathTop + pathBottom) / 2;
+					var marker = document.createElement("div");
+					marker.style.border = "1px solid pink";
+					marker.style.position = "absolute";
+					marker.style.left = horizontalPathCenter + "px";
+					marker.style.top = verticalPathCenter + "px";
+					marker.style.height = 2 + "px";
+					marker.style.width = 2 + "px"
+					//$(marker).appendTo("#score");
+					var thisDistance = Math.abs(verticalCenter - verticalPathCenter) + Math.abs(horizontalCenter - horizontalPathCenter);
+					if (thisDistance < closest && $(paths[i]).attr("fill") != "blue") { 
+						closestPath = i;
+						closest = thisDistance; 
+					};
+				};
+			};
+			$(paths[closestPath]).attr("fill", "blue");
+			if (closestPath > lastIndex) lastIndex = closestPath;
+		};
+		for (var j = 0; j < numAccidentals; j++) {
+			$(paths[lastIndex + j + 1]).attr("fill", "blue");
+		}
+	}
+
 	function findSVG(x, y) {
 		var paths = $("path");
 		var coordinate;
-		var extraCushion = 1;
 		for (var i = 0; i < paths.length; i++) {
 			var bb = paths[i].getBoundingClientRect();
 			var top = Math.ceil(bb.top + window.scrollY);
 			var left = Math.ceil(bb.left + window.scrollX);
 			var bottom = Math.floor(bb.bottom + window.scrollY);
 			var right = Math.floor(bb.right + window.scrollX);
-			var marker = document.createElement("div");
-			marker.style.border = "1px solid blue";
-			marker.style.position = "absolute";
-			marker.style.left = left + "px";
-			marker.style.top = top + "px";
-			marker.style.height = (bottom - top) + "px";
-			marker.style.width = (right - left) + "px"
-			//$(marker).appendTo("#score");
-			if (x <= right && x >= left && y >= top && y <= bottom && right - left > 9) {
-				$(paths[i]).attr("fill", "blue");
+			if (x <= right && x >= left && y >= top && y <= bottom && right - left < 15 && right - left > 8) {
 				coordinate = findCoord(x,y);
-				var startChordNote = i - 5 < 0 ? 0 : i - 5;
-				for (var j = startChordNote; j < startChordNote + 10; j++) {
-					var bb2 = paths[j].getBoundingClientRect();
-					var top2 = Math.ceil(bb2.top + window.scrollY);
-					var left2 = Math.ceil(bb2.left + window.scrollX);
-					var bottom2 = Math.floor(bb2.bottom + window.scrollY);
-					var right2 = Math.floor(bb2.right + window.scrollX);
-					var thisCoord = findCoord((left + right)/2, (top + bottom)/2);
-					// right - left requirements hack to select only notes
-					if (left2 + extraCushion >= coordinate.x && right2 <= coordinate.x + coordinate.w + extraCushion
-						&& top2 + extraCushion >= coordinate.y && bottom2 <= coordinate.y + coordinate.h + extraCushion
-						&& thisCoord.staveNote.location.voice == coordinate.staveNote.location.voice
-						&& thisCoord.staveNote.location.index == coordinate.staveNote.location.index) { 
-						$(paths[j]).attr("fill", "blue");
-					}
-				};
-				// console.log(coordinate);
-				// console.log("left: " + Math.ceil(left));
-				// console.log("right " + Math.floor(right));
-				// console.log("top: " + Math.ceil(top));
-				// console.log("bottom " + Math.floor(bottom));
+				noteMatch(i, coordinate);
+				return coordinate;
 			};
 		};
 	}

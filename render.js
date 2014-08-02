@@ -1,17 +1,23 @@
 "use strict";
 
 var STAVE = {
-	"x": 10,
-	"verticalPadding": 100,
-	"clefOffset": 10,
-	"timeSigOffset": 25,
-	"notePadding": 25
+"x": 10,
+"verticalPadding": 100,
+"clefOffset": 10,
+"timeSigOffset": 25,
+"notePadding": 25
 };
+
+// $.get("Bach_Prelude_C_Major.js", function(data) {
+// 	console.log(data);
+// });
 
 var vf = Vex.Flow;
 var renderer;
 var ctx;
 var coords = [];
+var SVGloaded = false;
+
 
 function note(keys_arg, duration_arg, clef_arg) {
 	var note = new vf.StaveNote({ keys: keys_arg, duration: duration_arg, clef: clef_arg });
@@ -47,8 +53,8 @@ function voice() {
 }
 
 function initNewStaveLine(lineNum) {
-	$("#score").append("<div id='treblecomments_" + lineNum + 
-		"'></div><div id='line_" + lineNum + "'></div><div id='basscomments_" + lineNum + "'></div>");
+	$("#score").append("<div id='treble_" + lineNum + "' class='annotationcontainer'></div><div id='line_" + 
+		lineNum + "'></div><div id='bass_" + lineNum + " class='annotationcontainer'></div>");
 	var paper = $("#line_" + lineNum);
 	renderer = new vf.Renderer(paper, vf.Renderer.Backends.RAPHAEL);
 	ctx = renderer.getContext();
@@ -139,6 +145,7 @@ function drawStaves(clefs, currentMeasure, end) {
 			}
 		}
 	}
+	SVGloaded = true;
 }
 
 function drawNotes(clefs, staves, measure, voicesWidth) {
@@ -178,6 +185,7 @@ function drawNotes(clefs, staves, measure, voicesWidth) {
 				note.location.measure = measure;
 				note.location.voice = voiceCount;
 				note.location.index = noteIndex;
+				note.location.lineNum = parseInt(renderer.sel[0].id.split("_")[1]);
 				theseCoords.staveNote = note;
 				coords.push(theseCoords);
 				noteIndex++;
