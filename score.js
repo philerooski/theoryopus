@@ -2,11 +2,14 @@
 
 (function() {
 	var mouseDrag = false;
+	var isSVGloaded = window.setInterval(function() {	
+		if (SVGloaded) {
+			$("#score svg").mousedown(scoreDrag);
+			$("#score svg").click(scoreSelect);
+			window.clearInterval(isSVGloaded);
+		}
+	}, 1000);
 
-	$(document).ready(function() {
-		$("#score").mousedown(event.data, scoreDrag);
-		$("#score").click(event.data, scoreSelect);
-	});
 
 	// TODO?: code breaks unless these are module-globals
 	var downX;
@@ -15,7 +18,7 @@
 	function scoreDrag(e) {
 		if (!e.metaKey) {
 			$("path").attr("fill", "black");
-		};
+		}
 		downX = e.pageX;
 		downY = e.pageY;
 		var selectBox = document.createElement("div");
@@ -50,8 +53,8 @@
 					$("#selectBox").css("top", top + "px");
 					$("#selectBox").css("height", (downY - top) + "px");
 					$("#selectBox").css("width", width + "px");
-				};
-			};
+				}
+			}
 		});
 		$(window).mouseup(function(e) {
 			if (mouseDrag) {
@@ -72,25 +75,24 @@
 		$(window).unbind("mousemove");
 		// find corresponding SVG (calls findCoord)
 		var coord = findSVG(x, y);
-		createAnnotation(coord);
+		if (coord) createAnnotation(coord);
 		$("#selectBox").remove();
 	}
 
 	function createAnnotation(coord) {
-		// Once server side stuff is implemented uncomment this
-		// $(".annotationcreator").remove();
+		// init stuff
+		var previousACreatorContainer = $(".annotationcreator").parent();
+		$(".annotationcreator").remove();
+		$(previousACreatorContainer).css("height", findChildrenHeight(previousACreatorContainer));
 		var annotation = document.createElement("div");
 		annotation.classList.add("annotationcreator");
-		annotation.style.left = coord.x + "px";
 		var textarea = document.createElement("textarea");
 		$(textarea).keyup(function() {
 			if (textarea.value.length) {
 				$(submit).css("backgroundColor", "");
 				submit.classList.add("annotationsubmitvalid");
 			} else {
-				var fullColor = $(submit).css("backgroundColor");
-				var falseColor = "rgba" + fullColor.slice(3, fullColor.length - 1) + ", 0.4)";
-				$(submit).css("backgroundColor", falseColor);
+				$(submit).css("backgroundColor", falseColorize(submit));
 				submit.classList.remove("annotationsubmitvalid");
 			}
 		});
@@ -102,6 +104,7 @@
 		submit.classList.add("annotationsubmit");
 		submit.innerHTML = "Submit";
 		annotation.appendChild(submit);
+		// categories
 		var melody = document.createElement("div");
 		var harmony = document.createElement("div");
 		var rhythm = document.createElement("div");
@@ -113,38 +116,104 @@
 			catVarArray[i].innerHTML = catArray[i].charAt(0).toUpperCase() + catArray[i].slice(1);
 			catVarArray[i].classList.add(catArray[i]);
 			catVarArray[i].classList.add("category");
-			$(catVarArray[i]).hover(function() {
-				this.classList.remove("categoryclear");
-				this.classList.add("categoryvalid");
-			}, function() {
-				this.classList.remove("categoryvalid");
-				this.classList.add("categoryclear");
-			});
 			$(catVarArray[i]).click(function(e) {
 				var doubleCat = false;
 				if (!e.metaKey) {
 					doubleCat = true;
-				};
+				}
 				for (var j = 0; j < catArray.length; j++) {
 					submit.classList.remove(catArray[j]);
-				};
+					catVarArray[j].classList.remove("categoryhighlight");
+				}
+				this.classList.add("categoryhighlight");
 				$(submit).css("backgroundColor", ""); // inherits styling from stylesheet instead
 				submit.classList.add(this.innerHTML.charAt(0).toLowerCase() + this.innerHTML.slice(1));
 				if (!textarea.value.length) {
-					var fullColor = $(submit).css("backgroundColor");
-					var falseColor = "rgba" + fullColor.slice(3, fullColor.length - 1) + ", 0.4)";
-					$(submit).css("backgroundColor", falseColor);
-				};
+					$(submit).css("backgroundColor", falseColorize(submit));
+				}
+				textarea.focus();
 			});
 			categories.appendChild(catVarArray[i]);
-		};
-
+		}
+		// annotation editor behavior
 		var containingDiv = "#" + coord.staveNote.location.clef + "_" + coord.staveNote.location.lineNum;
-		if (!parseInt($(containingDiv).css("height"))) {
-			// TODO: height shouldn't be hard-coded
-			$(containingDiv).css("height", 140);
-		};
-		$(annotation).appendTo(containingDiv); 
+		$(annotation).appendTo(containingDiv);
+		textarea.focus();
+		if (coord.x + parseInt($(annotation).css("width")) > $(window).width()) {
+			annotation.style.left = $(window).width() - parseInt($(annotation).css("width")) - 20 + "px";
+		} else {
+			annotation.style.left = coord.x + "px";
+		}
+		$(containingDiv).css("height", findChildrenHeight(containingDiv));
+		$(annotation).hover(function() {
+			annotation.style.opacity = 1;
+		});
+		$(".annotationcontainer").click(function() {
+			$(annotation).animate({opacity: "0.25"}, 250);
+		}).children().click(function() {
+			return false;
+		});
+		$(submit).click(function() {
+			var validCategory;
+			$(catArray).each(function() {
+				if (submit.classList.contains(this)) {
+					validCategory = true;
+				}
+			});
+			if (!textarea.value.length) {
+				jiggle(textarea, 3);
+				textarea.focus();
+			} else if (!validCategory) {
+				jiggle(categories, 3);
+			} else {
+				$(annotation).remove();
+				var note = document.createElement("div");
+				note.innerHTML = textarea.value;
+				note.classList.add("annotation");
+				for (var i = catArray.length - 1; i >= 0; i--) {
+					if (submit.classList.contains(catArray[i])) {
+						note.classList.add(catArray[i]);
+						if (catArray[i] == "melody" ||  catArray[i] == "rhythm") {
+							note.classList.add("categoryhighlight");
+						}
+					}
+				}
+				note.style.left = coord.x + "px";
+				$(note).appendTo(containingDiv);
+				$(containingDiv).css("height", findChildrenHeight(containingDiv));
+			}
+		}); 
+	}
+
+	function falseColorize(element) {
+		var fullColor = $(element).css("backgroundColor");
+		var falseColor = "rgba" + fullColor.slice(3, fullColor.length - 1) + ", 0.5)";
+		return falseColor;
+	}
+
+	function findChildrenHeight(thisContainer) {
+		var children = $(thisContainer).children();
+		var maxHeight = 0;
+		children.each(function() {
+			var height = parseInt($(this).css("height")) + parseInt($(this).css("padding-top")) + parseInt($(this).css("padding-bottom")) 
+			+ parseInt($(this).css("border-top")) + parseInt($(this).css("border-bottom")); + parseInt($(this).css("margin-top")) 
+			+ parseInt($(this).css("margin-bottom"));
+			if (height > maxHeight) {
+				maxHeight = height;
+			}
+		});
+		return maxHeight;
+	} 
+
+	function jiggle(item, count) {
+		$(item)
+	    .animate({top: '+=2', left: '+=2'}, 25)
+	    .animate({top: '-=4', left: '-=4'}, 50)
+	    .animate({top: '+=2', left: '+=2'}, 25, function(){
+	        if (count > 0) {
+	            jiggle(item, count-1);
+	        }
+	    });
 	}
 
 	function findSVGRange(downX, downY, upX, upY) {
@@ -160,7 +229,7 @@
 				|| (downX < left && upX > right && downY > top && upY < bottom) // bottom-left to top-right
 				|| (downX > right && upX < left && downY < bottom && upY > top) /* top-right to bottom-left */) {
 				$(this).attr("fill", "blue");
-			};
+			}
 		});
 	}
 
@@ -173,27 +242,13 @@
 				var right = left + coords[i].staveNote.note_heads[j].width + 4;
 				var top = coords[i].staveNote.note_heads[j].y + coords[i].staveNote.context.paper.canvas.offsetTop - 7;
 				var bottom = top + 12;
-				var marker = document.createElement("div");
-				marker.style.border = "1px solid pink";
-				marker.style.position = "absolute";
-				marker.style.left = left + "px";
-				marker.style.top = top + "px";
-				marker.style.height = (bottom - top) + "px";
-				marker.style.width = (right - left) + "px"
-				//$(marker).appendTo("#score");
 				if (left < x && right > x && top < y && bottom > y) {
 					console.log(coords[i]);
 					return coords[i];
-				};
-			};
-		}; 
+				}
+			}
+		} 
 	}
-
-	$(document).hover(function(e) {
-
-	}, function() {
-
-	});
 
 	function noteMatch(pathIndex, coord) {
 		var neighborHeads = coord.staveNote.note_heads;
@@ -222,24 +277,16 @@
 				if (pathRight - pathLeft > 8 && pathRight - pathLeft < 15) {
 					var horizontalPathCenter = (pathLeft + pathRight) / 2;
 					var verticalPathCenter = (pathTop + pathBottom) / 2;
-					var marker = document.createElement("div");
-					marker.style.border = "1px solid pink";
-					marker.style.position = "absolute";
-					marker.style.left = horizontalPathCenter + "px";
-					marker.style.top = verticalPathCenter + "px";
-					marker.style.height = 2 + "px";
-					marker.style.width = 2 + "px"
-					//$(marker).appendTo("#score");
 					var thisDistance = Math.abs(verticalCenter - verticalPathCenter) + Math.abs(horizontalCenter - horizontalPathCenter);
 					if (thisDistance < closest && $(paths[i]).attr("fill") != "blue") { 
 						closestPath = i;
 						closest = thisDistance; 
-					};
-				};
-			};
+					}
+				}
+			}
 			$(paths[closestPath]).attr("fill", "blue");
 			if (closestPath > lastIndex) lastIndex = closestPath;
-		};
+		}
 		for (var j = 0; j < numAccidentals; j++) {
 			$(paths[lastIndex + j + 1]).attr("fill", "blue");
 		}
@@ -258,7 +305,7 @@
 				coordinate = findCoord(x,y);
 				noteMatch(i, coordinate);
 				return coordinate;
-			};
-		};
+			}
+		}
 	}
 }());

@@ -4,8 +4,17 @@
 	font-size: 14px;
 }
 
+.annotation {
+	display: inline-block;
+	position: absolute;
+	border-radius: 10px;
+	padding: 10px;
+	max-width: 310px;
+	text-align: justify;
+}
+
 .annotationcontainer {
-	margin: 10px 0px 10px 0px;
+	
 }
 
 .annotationcreator {
@@ -17,14 +26,22 @@
 	border-radius: 5px;
 }
 
+.treblecomments {
+	margin-top: 20px;
+}
+
+.basscomments {
+	margin-bottom: 20px;
+}
+
 .categories {
 	display: block;
+	position: relative; /* for jiggle */
 	overflow: hidden;
 	text-align: center;
 }
 
 .category {
-	float: left;
 	display: inline-block;
 	border: 1px solid black;
 	padding: 5px;
@@ -32,18 +49,20 @@
 	border-radius: 5px;
 }
 
-.categoryclear {
-	color: black;
+.category:hover {
+	color: #F7F7F7;
 }
 
-.categoryvalid {
+.categoryhighlight, .none {
 	color: #F7F7F7;
 }
 
 .annotationcreator textarea {
+	position: relative; /* so jiggle works */
+	padding: 10px;
 	resize: none;
-	width: 310px;
-	height: 60px;
+	width: 290px;
+	height: 50px;
 	color: black;
 }
 
@@ -69,7 +88,7 @@
 }
 
 .none {
-	background: #ABABAB;
+	background: #1F1F1F;
 }
 
 .melodyharmony {

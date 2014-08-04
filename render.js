@@ -6,7 +6,7 @@ var STAVE = {
 "clefOffset": 10,
 "timeSigOffset": 25,
 "notePadding": 25
-};
+}
 
 // $.get("Bach_Prelude_C_Major.js", function(data) {
 // 	console.log(data);
@@ -25,11 +25,11 @@ function note(keys_arg, duration_arg, clef_arg) {
 		var accidental = note.keyProps[i].accidental
 		if (accidental) {
 			note.addAccidental(i, new vf.Accidental(accidental));
-		};
-	};
+		}
+	}
 	if (duration_arg.indexOf("d") != -1) {
 		note.addDotToAll();
-	};
+	}
 	return note;
 }
 
@@ -53,8 +53,8 @@ function voice() {
 }
 
 function initNewStaveLine(lineNum) {
-	$("#score").append("<div id='treble_" + lineNum + "' class='annotationcontainer'></div><div id='line_" + 
-		lineNum + "'></div><div id='bass_" + lineNum + " class='annotationcontainer'></div>");
+	$("#score").append("<div id='treble_" + lineNum + "' class='annotationcontainer treblecomments'></div><div id='line_" + 
+		lineNum + "'></div><div id='bass_" + lineNum + "' class='annotationcontainer basscomments'></div>");
 	var paper = $("#line_" + lineNum);
 	renderer = new vf.Renderer(paper, vf.Renderer.Backends.RAPHAEL);
 	ctx = renderer.getContext();
@@ -98,8 +98,8 @@ function drawStaves(clefs, currentMeasure, end) {
 					thisStavesWidth += STAVE.clefOffset + keySigOffset;
 					if (!currentLine) {
 						thisStavesWidth += STAVE.timeSigOffset;
-					};
-				};
+					}
+				}
 				if (measureWidthSoFar + thisStavesWidth < lineWidth) {
 					measureWidthSoFar += thisStavesWidth;
 					LineMeasuresVoicesWidth.push(theseVoicesWidth);
@@ -109,9 +109,9 @@ function drawStaves(clefs, currentMeasure, end) {
 				} else {
 					spaceLeft = false;
 				}
-			};
+			}
 			newLine = false;
-		};
+		}
 		var voicesWidth =  LineMeasuresVoicesWidth[currentLineMeasure] + spareChange;
 		var staveWidth = LineMeasuresStaveWidth[currentLineMeasure] + spareChange;
 		for (var i = 0; i < clefs.length; i++) {
@@ -127,7 +127,7 @@ function drawStaves(clefs, currentMeasure, end) {
 			}
 			currentStave.setContext(ctx).draw(); 
 			grandStaff.push(currentStave);
-		};
+		}
 		drawNotes(clefs, grandStaff, currentMeasure, voicesWidth);
 		grandStaff = [];
 		currentMeasure++;
@@ -155,11 +155,11 @@ function drawNotes(clefs, staves, measure, voicesWidth) {
 		var this_x = staves[stave].getNoteStartX();
 		if (this_x > max_x) {
 			max_x = this_x;
-		};
-	};
+		}
+	}
 	for (stave = 0; stave < staves.length; stave++) {
 		staves[stave].setNoteStartX(max_x);
-	};
+	}
 	clefs.forEach(function(clef) {
 		var formatter = new vf.Formatter();
 		formatter.format(clef["m" + measure], voicesWidth - STAVE.notePadding);
@@ -170,7 +170,7 @@ function drawNotes(clefs, staves, measure, voicesWidth) {
 			staves.forEach(function(stave) {
 				if (stave.clef == clef.partName) {
 					thisStave = stave;
-				};
+				}
 			});
 			voice.draw(ctx, thisStave);
 			var noteIndex = 0;
@@ -215,7 +215,7 @@ function organizeSVG(lineNum, lineWidth, lineHeight) {
 		var height = parseInt($(this).attr("y"));
 		if (height > lowestPoint) {
 			lowestPoint = height;
-		};
+		}
 	});
 	$(thisSVG).attr("height", lowestPoint + 20);
 	return thisSVG;
