@@ -52,9 +52,16 @@ function voice() {
 	});
 }
 
+// TODO: This code is janky as fuck
 function initNewStaveLine(lineNum) {
-	$("#score").append("<div id='treble_" + lineNum + "' class='annotationcontainer treblecomments'></div><div id='line_" + 
-		lineNum + "'></div><div id='bass_" + lineNum + "' class='annotationcontainer basscomments'></div>");
+	var i = 0;
+	var DisplayCommentLine = function() {
+		$("#score").append("<div id='" + CLEFS[i].partName + "_" + lineNum + "' class='annotationcontainer'></div>");
+	}
+	DisplayCommentLine();
+	$("#score").append("<div id='line_" + lineNum + "'></div>");
+	i++;
+	DisplayCommentLine();
 	var paper = $("#line_" + lineNum);
 	renderer = new vf.Renderer(paper, vf.Renderer.Backends.RAPHAEL);
 	ctx = renderer.getContext();
@@ -165,7 +172,14 @@ function drawNotes(clefs, staves, measure, voicesWidth) {
 		formatter.format(clef["m" + measure], voicesWidth - STAVE.notePadding);
 		var voiceCount = 0;
 		clef["m" + measure].forEach(function(voice) {
-			beams.push(vf.Beam.generateBeams(voice.tickables));
+			if (beamGroups) {
+				var count = beamGroups.split("/")[0];
+				var noteType = beamGroups.split("/")[1];
+				var fraction = new vf.Fraction(count, noteType);
+				beams.push(vf.Beam.generateBeams(voice.tickables, {groups: [fraction]}));
+			} else {
+				beams.push(vf.Beam.generateBeams(voice.tickables));
+			}
 			var thisStave;
 			staves.forEach(function(stave) {
 				if (stave.clef == clef.partName) {
@@ -176,6 +190,8 @@ function drawNotes(clefs, staves, measure, voicesWidth) {
 			var noteIndex = 0;
 			voice.tickables.forEach(function(note) {
 				var theseCoords = note.getBoundingBox();
+				// TODO: This timer is unnessecary 
+				// also, y constantly changes when adding comments - how this still works is beyond me
 				window.setTimeout(function() {
 					theseCoords["y"] = parseInt(note.context.paper.canvas.offsetTop + theseCoords["y"]);
 				}, 1000);

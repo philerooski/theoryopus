@@ -2,7 +2,8 @@
 
 var MEASURE_COUNT = 6;
 var TIME_SIGNATURE = "4/4";
-var KEY_SIGNATURE = "Cb";
+var KEY_SIGNATURE = "C";
+var beamGroups = null;
 
 var treble = {
 	partName: "treble",
@@ -11,7 +12,7 @@ var treble = {
 	voice().addTickables(
 		[
 		note(["g/5", "eb/5"], "4"),
-		note(["c##/4", "a/4"], "2"),
+		note(["c##/4"], "2"),
 		note(["g/4"], "4")
 		]
 		),
@@ -54,7 +55,7 @@ var treble = {
 	voice().addTickables(
 		[
 		note(["eb/5"], "4"),
-		note(["c##/4", "a/4"], "2"),
+		note(["c##/4"], "2"),
 		note(["g/4"], "4")
 		]
 		),
@@ -97,7 +98,7 @@ var treble = {
 	voice().addTickables(
 		[
 		note(["eb/5"], "4"),
-		note(["c##/4", "a/4"], "2"),
+		note(["c##/4"], "2"),
 		note(["g/4"], "4")
 		]
 		),

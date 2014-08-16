@@ -4,17 +4,29 @@
 	font-size: 14px;
 }
 
-.annotation {
-	display: inline-block;
-	position: absolute;
-	border-radius: 10px;
+.listannotation ol > li, .annotationcreator textarea {
 	padding: 10px;
-	max-width: 310px;
-	text-align: justify;
 }
 
-.annotationcontainer {
-	
+.listannotation {
+	display: inline-block;
+	position: absolute;
+	z-index: -1;
+}
+
+.listannotation ol {
+	padding-left: 0px;
+}
+
+.listannotation ol > li {
+	float: left;
+	clear: both;
+	border-radius: 10px;
+	margin-top: 5px;
+	max-width: 310px;
+	text-align: justify;
+	line-height: 120%;
+	list-style: none;
 }
 
 .annotationcreator {
@@ -22,16 +34,11 @@
 	position: absolute;
 	width: 320px;
 	height: 120px;
-	padding: 10px;
 	border-radius: 5px;
 }
 
-.treblecomments {
-	margin-top: 20px;
-}
-
-.basscomments {
-	margin-bottom: 20px;
+.annotationcontainer {
+	margin: 10px 0px;
 }
 
 .categories {
@@ -41,7 +48,7 @@
 	text-align: center;
 }
 
-.category {
+.categories > div {
 	display: inline-block;
 	border: 1px solid black;
 	padding: 5px;
@@ -49,17 +56,12 @@
 	border-radius: 5px;
 }
 
-.category:hover {
-	color: #F7F7F7;
-}
-
-.categoryhighlight, .none {
+.categoryhighlight, .none, .categories > div:hover {
 	color: #F7F7F7;
 }
 
 .annotationcreator textarea {
 	position: relative; /* so jiggle works */
-	padding: 10px;
 	resize: none;
 	width: 290px;
 	height: 50px;
@@ -129,6 +131,10 @@
 	border: 1px solid black;
 	border-radius: 20px;
 	text-align: center;
+}
+
+.annotationsubmitinvalid {
+	background-color: rgba(247, 247, 247, 0.5);
 }
 
 .annotationsubmitvalid:hover {
