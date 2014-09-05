@@ -1,5 +1,8 @@
 "use strict";
 
+// renders a score notated in js/VexFlow to the user's screen
+// author: Phil Snyder
+
 var STAVE = {
 "x": 10,
 "verticalPadding": 100,
@@ -62,6 +65,7 @@ function initNewStaveLine(lineNum) {
 	$("#score").append("<div id='line_" + lineNum + "'></div>");
 	i++;
 	DisplayCommentLine();
+        // $("#score").append("<hr></hr>"); Do we need to seperate each comment div with an hr?
 	var paper = $("#line_" + lineNum);
 	renderer = new vf.Renderer(paper, vf.Renderer.Backends.RAPHAEL);
 	ctx = renderer.getContext();
@@ -190,12 +194,7 @@ function drawNotes(clefs, staves, measure, voicesWidth) {
 			var noteIndex = 0;
 			voice.tickables.forEach(function(note) {
 				var theseCoords = note.getBoundingBox();
-				// TODO: This timer is unnessecary 
-				// also, y constantly changes when adding comments - how this still works is beyond me
-				window.setTimeout(function() {
-					theseCoords["y"] = parseInt(note.context.paper.canvas.offsetTop + theseCoords["y"]);
-				}, 1000);
-				theseCoords["x"] = parseInt(note.context.paper.canvas.offsetLeft + theseCoords["x"]);
+				theseCoords.x = parseInt(note.context.paper.canvas.offsetLeft + theseCoords.x);
 				note.location = {};
 				note.location.clef = clef.clefType;
 				note.location.measure = measure;

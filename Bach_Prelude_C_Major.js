@@ -2,7 +2,12 @@
 
 var MEASURE_COUNT = 6;
 var TIME_SIGNATURE = "4/4";
-var KEY_SIGNATURE = "C";
+var KEY_SIGNATURE = "Cb";
+var TITLE = "An Exercise in Perseverance";
+var COMPOSER = "Myself";
+var SUMMARY = "This is a test score I've been working on for quite a while. In fact, I've probably spent more hours looking at this piece than any other piece in the solo piano repertoire. It really wouldn't sound very good if I actually played it, though.</br></br>You know, the piano is a funny thing. It has 52 white keys, 36 black keys, but it has yet to give me the key to your heart. Do you feel seduced yet? Good.";
+var TEMPO = "54 BPM";
+var FORM = "Rondo ABACA";
 var beamGroups = null;
 
 var treble = {
