@@ -15,14 +15,13 @@ var vf = Vex.Flow;
 var renderer;
 var ctx;
 var coords = [];
-var SVGloaded = false;
 
 function Score(containingDiv, clefs, currentMeasure, end) {
 // TODO: This code is janky as fuck
     this.initNewStaveLine = function(lineNum) {
 	var i = 0;
 	var DisplayCommentLine = function() {
-		$(containingDiv).append("<div id='" + CLEFS[i].partName + "_" + lineNum + "' class='annotationcontainer'></div>");
+		$(containingDiv).append("<div id='" + clefs[i].partName + "_" + lineNum + "' class='annotationcontainer'></div>");
 	}
 	DisplayCommentLine();
 	$(containingDiv).append("<div id='line_" + lineNum + "'></div>");
@@ -46,7 +45,7 @@ function Score(containingDiv, clefs, currentMeasure, end) {
 	return width;
 }
 
-this.drawStaves = function() { 
+this.drawStaves = function(KEY_SIGNATURE, beamGroups, decorations) { 
 	var grandStaff = [];
 	var currentLine = 0;
 	var currentLineMeasure = 0;
@@ -101,7 +100,7 @@ this.drawStaves = function() {
 			currentStave.setContext(ctx).draw(); 
 			grandStaff.push(currentStave);
 		}
-		this.drawNotes(clefs, grandStaff, currentMeasure, voicesWidth);
+		this.drawNotes(clefs, grandStaff, currentMeasure, voicesWidth, beamGroups, decorations);
 		grandStaff = [];
 		currentMeasure++;
 		currentLineMeasure++;
@@ -118,10 +117,9 @@ this.drawStaves = function() {
 			}
 		}
 	}
-	SVGloaded = true;
 }
 
-    this.drawNotes = function(clefs, staves, measure, voicesWidth) {
+    this.drawNotes = function(clefs, staves, measure, voicesWidth, beamGroups, decorations) {
 	var beams = [];
 	var max_x = 0;
 	for (var stave = 0; stave < staves.length; stave++) {

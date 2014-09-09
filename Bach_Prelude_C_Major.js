@@ -1,7 +1,9 @@
 "use strict";
 
+var TIME_SIGNATURE = "4/4"; 
+
+function Notes() {
 var MEASURE_COUNT = 6;
-var TIME_SIGNATURE = "4/4";
 var KEY_SIGNATURE = "Cb";
 var TITLE = "An Exercise in Perseverance";
 var COMPOSER = "Myself";
@@ -10,6 +12,7 @@ var SUMMARY = "This is a test score I've been working on for quite a while. In f
 var TEMPO = "54 BPM";
 var FORM = "Confused Sonatina ABABAB'";
 var beamGroups = null;
+
 
 var treble = {
 	partName: "treble",
@@ -214,4 +217,22 @@ var decorations = {
 	m5: [tie(bass,4,0,1,[0],5,0,1,[0])]
 }
 
-var CLEFS = [treble, bass]; // adlkfa;sdlkjf;alskdjf;ladksj
+var CLEFS = [treble, bass];    
+
+this.getInfo = function() {
+    return {
+        MEASURE_COUNT: MEASURE_COUNT,
+        KEY_SIGNATURE: KEY_SIGNATURE,
+        TITLE: TITLE,
+        COMPOSER: COMPOSER,
+        TABLE_ID: TABLE_ID,
+        SUMMARY: SUMMARY,
+        TEMPO: TEMPO,
+        FORM: FORM,
+        CLEFS: CLEFS,
+        beamGroups: beamGroups,
+        decorations: decorations
+    }
+}
+}
+

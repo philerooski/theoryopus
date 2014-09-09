@@ -3,12 +3,31 @@
 // handles user interaction with the score
 // author: Phil Snyder
 
-function View(containingDiv) {
+function View(containingDiv, TABLE_ID) {
 var annotations = [];
 var mouseDrag = false;
 var currentSelection = [];
 var self = this;
 
+this.drawHeader = function(TITLE, COMPOSER) {
+    $("header").html("");
+    $("header").html(TITLE);
+    if (COMPOSER) $("header").append("<div id='composer'>" + COMPOSER + "</div>"); 
+}
+
+this.drawSummary = function(SUMMARY, KEY_SIGNATURE, TEMPO, FORM, TIME_SIGNATURE, MEASURE_COUNT) {
+    $("#summarycontainer").html("");
+    if (SUMMARY) $("#summarycontainer").html("<div id='programnotes'><strong>Program Notes:</strong> " + SUMMARY + "</div>");
+    // TODO: replace all this with a definition list
+    $("#summarycontainer").append("<div id='quickfacts'><strong>Quick Facts:</strong></br></br>"
+            + "<strong>Primary Key:</strong> " + KEY_SIGNATURE + "</br>"
+            + "<strong>Tempo:</strong> " + TEMPO + "</br>"
+            + "<strong>Form:</strong> " + FORM + "</br>"
+            + "<strong>Primary Time Signature:</strong> " + TIME_SIGNATURE + "</br>"
+            + "<strong>Total Measures:</strong> " + MEASURE_COUNT + "</div>");
+    // TODO: quit hacking and just type out all the margin and border styles
+    $("#programnotes, #quickfacts").css("width", parseInt($(window).width()/2 - 40)); 
+}
 this.windowKeyUp = function(e) {
 	if (e.keyCode == 27) { // esc
 		$(".annotationcreator").remove();
@@ -368,7 +387,6 @@ this.createAnnotation = function(coord, selectedNotes) {
                                         "category": thisCategory,
                                         "table": TABLE_ID
 				},
-				complete: self.checkAnnotationStatus
 			});  
 
 			// sort on screen
@@ -390,14 +408,14 @@ this.createAnnotation = function(coord, selectedNotes) {
 		}
 	});
 }
-
-this.checkAnnotationStatus = function(xhr, status) {
-	if (status != "success") {
-		console.log(this.status);	
-	} else {
-		console.log(xhr.responseText);
-	}
-}
+// TODO: for now, debug, but eventually error checking
+// this.checkAnnotationStatus = function(xhr, status) {
+// 	if (status != "success") {
+// 		console.log(this.status);	
+// 	} else {
+// 		console.log(xhr.responseText);
+// 	}
+// }
 
 // "wraps" annotation wrappers around each other so they don't lie on top of each other
 this.adjustAnnotationHeight = function(wrapper, direction) {
