@@ -5,9 +5,10 @@ var TIME_SIGNATURE = "4/4";
 var KEY_SIGNATURE = "Cb";
 var TITLE = "An Exercise in Perseverance";
 var COMPOSER = "Myself";
+var TABLE_ID = "test";
 var SUMMARY = "This is a test score I've been working on for quite a while. In fact, I've probably spent more hours looking at this piece than any other piece in the solo piano repertoire. It really wouldn't sound very good if I actually played it, though.</br></br>You know, the piano is a funny thing. It has 52 white keys, 36 black keys, but it has yet to give me the key to your heart. Do you feel seduced yet? Good.";
 var TEMPO = "54 BPM";
-var FORM = "Rondo ABACA";
+var FORM = "Confused Sonatina ABABAB'";
 var beamGroups = null;
 
 var treble = {
@@ -213,8 +214,4 @@ var decorations = {
 	m5: [tie(bass,4,0,1,[0],5,0,1,[0])]
 }
 
-var CLEFS = [treble, bass];
-
-$(document).ready(function() {
-	drawStaves(CLEFS, 0, MEASURE_COUNT);
-});
+var CLEFS = [treble, bass]; // adlkfa;sdlkjf;alskdjf;ladksj

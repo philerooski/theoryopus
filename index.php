@@ -28,6 +28,7 @@
         }
     }
     ?>
+    <script type="text/javascript" src="control.js"></script>
 </head>
 <body>
     <header>

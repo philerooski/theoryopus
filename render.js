@@ -11,68 +11,30 @@ var STAVE = {
 "notePadding": 25
 }
 
-// $.get("Bach_Prelude_C_Major.js", function(data) {
-// 	console.log(data);
-// });
-
 var vf = Vex.Flow;
 var renderer;
 var ctx;
 var coords = [];
 var SVGloaded = false;
 
-
-function note(keys_arg, duration_arg, clef_arg) {
-	var note = new vf.StaveNote({ keys: keys_arg, duration: duration_arg, clef: clef_arg });
-	for (var i = 0; i < keys_arg.length; i++) {
-		var accidental = note.keyProps[i].accidental
-		if (accidental) {
-			note.addAccidental(i, new vf.Accidental(accidental));
-		}
-	}
-	if (duration_arg.indexOf("d") != -1) {
-		note.addDotToAll();
-	}
-	return note;
-}
-
-function tie(clef, beginMeasure, beginVoice, beginChord, beginNote, endMeasure, endVoice, endChord, endNote) {
-	var tieNotes = {
-		first_note: clef["m" + beginMeasure][beginVoice].tickables[beginChord],
-		last_note: clef["m" + endMeasure][endVoice].tickables[endChord],
-		first_indices: beginNote,
-		last_indices: endNote
-	} 
-	return new vf.StaveTie(tieNotes);
-}
-
-function voice() {
-	var timeSig = TIME_SIGNATURE.split("/");
-	return new vf.Voice({
-		num_beats: timeSig[0],
-		beat_value: timeSig[1],
-		resolution: vf.RESOLUTION
-	});
-}
-
+function Score(containingDiv, clefs, currentMeasure, end) {
 // TODO: This code is janky as fuck
-function initNewStaveLine(lineNum) {
+    this.initNewStaveLine = function(lineNum) {
 	var i = 0;
 	var DisplayCommentLine = function() {
-		$("#score").append("<div id='" + CLEFS[i].partName + "_" + lineNum + "' class='annotationcontainer'></div>");
+		$(containingDiv).append("<div id='" + CLEFS[i].partName + "_" + lineNum + "' class='annotationcontainer'></div>");
 	}
 	DisplayCommentLine();
-	$("#score").append("<div id='line_" + lineNum + "'></div>");
+	$(containingDiv).append("<div id='line_" + lineNum + "'></div>");
 	i++;
 	DisplayCommentLine();
-        // $("#score").append("<hr></hr>"); Do we need to seperate each comment div with an hr?
+        // $(containingDiv).append("<hr></hr>"); Do we need to seperate each comment div with an hr?
 	var paper = $("#line_" + lineNum);
 	renderer = new vf.Renderer(paper, vf.Renderer.Backends.RAPHAEL);
 	ctx = renderer.getContext();
 	return true;
 }
-
-function calculateVoicesWidth(clefs, currentMeasure, measureCount) {
+    this.calculateVoicesWidth = function(clefs, currentMeasure, measureCount) {
 	var thisMeasuresVoices = [];
 	for (var i = 0; i < clefs.length; i++) {
 		var currentVoiceMeasure = "m" + (currentMeasure + measureCount);
@@ -84,7 +46,7 @@ function calculateVoicesWidth(clefs, currentMeasure, measureCount) {
 	return width;
 }
 
-function drawStaves(clefs, currentMeasure, end) {
+this.drawStaves = function() { 
 	var grandStaff = [];
 	var currentLine = 0;
 	var currentLineMeasure = 0;
@@ -93,7 +55,7 @@ function drawStaves(clefs, currentMeasure, end) {
 	var lineWidth = parseInt($(window).width() - STAVE.x - 50);
 	var lineWidthSoFar = 0;
 	var keySigOffset = Vex.Flow.keySignature.keySpecs[KEY_SIGNATURE].num * 10;
-	var newLine = initNewStaveLine(currentLine);
+	var newLine = this.initNewStaveLine(currentLine);
 	var spareChange; // extra width we can add to the min rendering width of each measure/stave
 	while (currentMeasure < end) {
 		if (newLine) {
@@ -103,7 +65,7 @@ function drawStaves(clefs, currentMeasure, end) {
 			var spaceLeft = true;
 			while (spaceLeft && currentMeasure + measureCount < end) {
 				var thisStavesWidth = 0;
-				var theseVoicesWidth = calculateVoicesWidth(clefs, currentMeasure, measureCount);
+				var theseVoicesWidth = this.calculateVoicesWidth(clefs, currentMeasure, measureCount);
 				thisStavesWidth += theseVoicesWidth;
 				if (!measureCount) {
 					thisStavesWidth += STAVE.clefOffset + keySigOffset;
@@ -139,27 +101,27 @@ function drawStaves(clefs, currentMeasure, end) {
 			currentStave.setContext(ctx).draw(); 
 			grandStaff.push(currentStave);
 		}
-		drawNotes(clefs, grandStaff, currentMeasure, voicesWidth);
+		this.drawNotes(clefs, grandStaff, currentMeasure, voicesWidth);
 		grandStaff = [];
 		currentMeasure++;
 		currentLineMeasure++;
 		lineWidthSoFar += staveWidth;
 		if (currentLineMeasure == LineMeasuresStaveWidth.length) {
-			organizeSVG(currentLine, lineWidth, clefs.length * 100, true);
+			this.organizeSVG(currentLine, lineWidth, clefs.length * 100, true); 
 			if (currentMeasure != end) {
 				currentLine++;
 				currentLineMeasure = 0;
 				lineWidthSoFar = 0;
 				LineMeasuresVoicesWidth = [];
 				LineMeasuresStaveWidth = [];
-				newLine = initNewStaveLine(currentLine);
+				newLine = this.initNewStaveLine(currentLine);
 			}
 		}
 	}
 	SVGloaded = true;
 }
 
-function drawNotes(clefs, staves, measure, voicesWidth) {
+    this.drawNotes = function(clefs, staves, measure, voicesWidth) {
 	var beams = [];
 	var max_x = 0;
 	for (var stave = 0; stave < staves.length; stave++) {
@@ -220,7 +182,7 @@ function drawNotes(clefs, staves, measure, voicesWidth) {
 	});
 }
 
-function organizeSVG(lineNum, lineWidth, lineHeight) {
+    this.organizeSVG = function(lineNum, lineWidth, lineHeight) {
 	$("body > svg").attr("width", lineWidth + STAVE.x + 10);
 	$("body > svg").removeAttr("style");
 	$("body > svg").appendTo($("#line_" + lineNum));
@@ -234,4 +196,38 @@ function organizeSVG(lineNum, lineWidth, lineHeight) {
 	});
 	$(thisSVG).attr("height", lowestPoint + 20);
 	return thisSVG;
+}
+}
+
+function note(keys_arg, duration_arg, clef_arg) {
+	var note = new vf.StaveNote({ keys: keys_arg, duration: duration_arg, clef: clef_arg });
+	for (var i = 0; i < keys_arg.length; i++) {
+		var accidental = note.keyProps[i].accidental
+		if (accidental) {
+			note.addAccidental(i, new vf.Accidental(accidental));
+		}
+	}
+	if (duration_arg.indexOf("d") != -1) {
+		note.addDotToAll();
+	}
+	return note;
+}
+
+function tie(clef, beginMeasure, beginVoice, beginChord, beginNote, endMeasure, endVoice, endChord, endNote) {
+	var tieNotes = {
+		first_note: clef["m" + beginMeasure][beginVoice].tickables[beginChord],
+		last_note: clef["m" + endMeasure][endVoice].tickables[endChord],
+		first_indices: beginNote,
+		last_indices: endNote
+	} 
+	return new vf.StaveTie(tieNotes);
+}
+
+function voice() {
+	var timeSig = TIME_SIGNATURE.split("/");
+	return new vf.Voice({
+		num_beats: timeSig[0],
+		beat_value: timeSig[1],
+		resolution: vf.RESOLUTION
+	});
 }
