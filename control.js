@@ -2,17 +2,19 @@
 (function() {
 $(document).ready(function() {
     var notes = new Notes();
-    var noteInfo = notes.getInfo();
+    var TABLE_ID = notes.getTableId();
     
-    var score = new Score("#score", noteInfo.CLEFS, 0, noteInfo.MEASURE_COUNT);
-    score.drawStaves(noteInfo.KEY_SIGNATURE, noteInfo.beamGroups, noteInfo.decorations);
+    var scoreContainer = "#score";
+    var scoreProcessor = "#pathpurgatory";
+    var score = new Score(scoreContainer, scoreProcessor, 0, MEASURE_COUNT);
+    score.drawStaves();
     
-    var view = new View("#score", noteInfo.TABLE_ID);
-    view.drawHeader(noteInfo.TITLE, noteInfo.COMPOSER);
-    view.drawSummary(noteInfo.SUMMARY, noteInfo.KEY_SIGNATURE, noteInfo.TEMPO,
-        noteInfo.FORM, noteInfo.TIME_SIGNATURE, noteInfo.MEASURE_COUNT);
+    var view = new View(scoreContainer, TABLE_ID);
+    view.drawHeader();
+    view.drawSummary();
+    view.loadComments();
     
-    $("#score").mousedown(view.scoreDrag);
+    $("#score svg").mousedown(view.scoreDrag);
     $("#score svg").click(view.scoreSelect);
     $(window).keyup(view.windowKeyUp);
     $(window).mouseup(view.checkForScoreDrag);
@@ -23,6 +25,4 @@ $(document).ready(function() {
     }
 
 });
-
-
 }());

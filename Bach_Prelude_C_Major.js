@@ -28,7 +28,7 @@ var treble = {
 	voice().addTickables(
 		[
 		note(["e/4"], "16"),
-		note(["cn/5", "a/4"], "16"),
+		note(["a/4", "cn/5"], "16"),
 		note(["g/3"], "16"),
 		note(["e/4"], "16"),
 		note(["cn/5", "a/4"], "16"),
