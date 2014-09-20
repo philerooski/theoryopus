@@ -35,9 +35,7 @@ var treble = {
     voice().addTickables(
             [
             new vf.GhostNote("2"),
-            new Vex.Flow.StaveNote({
-                keys: ["g/3", "b/3"], duration: "4", stem_direction: -1
-            }).addAccidental(1, new vf.Accidental("n")),
+            note(["g/3", "bn/3"], "4").setStemDirection(-1),
             new vf.GhostNote("4")
             ] 
             ),
@@ -52,21 +50,15 @@ var treble = {
                 [
                 note(["e/3", "a/3", "c/4", "e/4"], "4", "bass"),
                 note(["f/3", "a/3", "db/4", "f/4"], "4", "bass"),
-                new vf.StaveNote({
-                    keys: ["c/4", "e/4"], duration: "8d", clef: "bass", stem_direction: 1
-                }),
-                new vf.StaveNote({
-                    keys: ["b/3", "d/4"], duration: "16", clef: "bass", stem_direction: 1
-                }),
+                note(["c/4", "e/4"], "8d", "bass"),
+                note(["b/3", "d/4"], "16", "bass"),
                 note(["c/3", "e/3", "a/3", "c/4"], "4", "bass"),
                 ] 
                 ),
     voice().addTickables(
             [
             new vf.GhostNote("2"),
-            new vf.StaveNote({
-                keys: ["db/3", "e/3", "g/3"], duration: "4", clef: "bass", stem_direction: -1
-            }).addAccidental(0, new vf.Accidental("b")),
+            note(["db/3", "e/3", "g/3"], "4", "bass", -1),
             new vf.GhostNote("4")
             ]
             )
@@ -84,9 +76,7 @@ var treble = {
     voice().addTickables(
             [
             new vf.GhostNote("2"),
-            new vf.StaveNote({
-                keys: ["a/3", "c/4"], duration: "4", clef: "bass", stem_direction: -1
-            }),
+            note(["a/3", "c/4"], "4", "bass", -1),
             new vf.GhostNote("4")
             ]
             )
@@ -94,27 +84,17 @@ var treble = {
     m3: [
         voice().addTickables(
                 [
-                new vf.StaveNote({
-                    keys: ["f/3", "c/4", "d/4"], duration: "4"
-                }).addAccidental(0, new vf.Accidental("#")),
-                new vf.StaveNote({
-                    keys: ["g/3", "b/3", "d/4", "g/4"], duration: "4"
-                }).addAccidental(1, new vf.Accidental("n")),
-                new vf.StaveNote({
-                    keys: ["b/4"], duration: "8d"
-                }).addAccidental(0, new vf.Accidental("n")),
+                note(["f#/3", "c/4", "d/4"], "4", "treble", -1),
+                note(["g/3", "bn/3", "d/4", "g/4"], "4"),
+                note(["bn/4"], "8d"),
                 note(["an/4"], "16"),
-                new vf.StaveNote({
-                    keys: ["b/3", "d/4", "g/4"], duration: "4"
-                }).addAccidental(0, new vf.Accidental("n"))
+                note(["bn/3", "d/4", "g/4"], "4")
                 ]
                 ),
     voice().addTickables(
             [
             new vf.GhostNote("2"),
-            new Vex.Flow.StaveNote({
-                keys: ["c/4", "d/4", "f/4"], duration: "4", stem_direction: -1
-            }).addAccidental(2, new vf.Accidental("#")),
+            note(["c/4", "d/4", "f#/4"], "4", "treble", -1),
             new vf.GhostNote("4")
             ] 
             )
@@ -128,12 +108,8 @@ var treble = {
                 ]),
     voice().addTickables([
             new vf.GhostNote("2"),    
-            new vf.StaveNote({
-                keys: ["a/4"], duration: "8d"
-            }),
-            new vf.StaveNote({
-                keys: ["f/4"], duration: "16"
-            }).addAccidental(0, new vf.Accidental("#")),
+            note(["a/4"], "8d"),
+            note(["f#/4"], "16"),
             new vf.GhostNote("4")
             ]),
     voice().addTickables([
@@ -161,9 +137,7 @@ var treble = {
                 ]),
     voice().addTickables([
             new vf.GhostNote("2"),
-            new vf.StaveNote({
-                keys: ["g/3", "d/4"], duration: "4", stem_direction: -1
-            }),
+            note(["g/3", "d/4"], "4", "treble", -1),
             new vf.GhostNote("4")
             ])
         ],
@@ -177,9 +151,7 @@ var treble = {
                 ]),
     voice().addTickables([
             new vf.GhostNote("2"),
-            new vf.StaveNote({
-                keys: ["f/3", "g/3", "b/3"], duration: "4", clef: "bass", stem_direction: -1
-            }).addAccidental(2, new vf.Accidental("n")),
+            note(["f/3", "g/3", "bn/3"], "4", "bass", -1),
             new vf.GhostNote("4")
             ])
         ],
@@ -192,12 +164,8 @@ var treble = {
                 ]),
     voice().addTickables([
             new vf.GhostNote("2"),    
-            new vf.StaveNote({
-                keys: ["a/4"], duration: "8d"
-            }),
-            new vf.StaveNote({
-                keys: ["f/4"], duration: "16"
-            }).addAccidental(0, new vf.Accidental("#")),
+            note(["a/4"], "8d"),
+            note(["f#/4"], "16"),
             new vf.GhostNote("4")
             ])
         ],
@@ -220,9 +188,7 @@ var treble = {
                 ]),
     voice().addTickables([
             new vf.GhostNote("2"),
-            new vf.StaveNote({
-                keys: ["g/3", "d/4"], duration: "4", stem_direction: -1
-            }),
+            note(["g/3", "d/4"], "4", "treble", -1),
             new vf.GhostNote("4")
             ])
         ],
@@ -236,9 +202,7 @@ var treble = {
                 ]),
     voice().addTickables([
             new vf.GhostNote("2"),
-            new vf.StaveNote({
-                keys: ["f/3", "g/3", "b/3"], duration: "4", clef: "bass", stem_direction: -1
-            }).addAccidental(2, new vf.Accidental("n")),
+            note(["f/3", "g/3", "bn/3"], "4", "bass", -1),
             new vf.GhostNote("4")
             ])
         ],
@@ -290,18 +254,10 @@ var bass = {
     m3: [
         voice().addTickables(
                 [
-                new vf.StaveNote({
-                    keys: ["d/2", "a/2", "d/3"], duration: "4", clef: "bass"
-                }).addAccidental(1, new vf.Accidental("n")),
-                new vf.StaveNote({
-                    keys: ["g/1", "g/2"], duration: "4", clef: "bass"
-                }),
-                new vf.StaveNote({
-                    keys: ["d/1", "d/2"], duration: "4", clef: "bass"
-                }),
-                new vf.StaveNote({
-                    keys: ["g/1", "g/2"], duration: "4", clef: "bass"
-                })
+                note(["d/2", "an/2", "d/3"], "4", "bass"),
+                note(["g/1", "g/2"], "4", "bass"),
+                note(["d/1", "d/2"], "4", "bass"),
+                note(["g/1", "g/2"], "4", "bass")
                 ]
                 )
         ],

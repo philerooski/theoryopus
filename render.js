@@ -246,18 +246,18 @@ function Score(containingDiv, processingDiv, currentMeasure, end) {
             for (var i = 0; i < notes.length; i++) {
                 var note = notes[i];
                 var accidentalSomewhere;
-                $(note.keyProps).each(function() {
-                    if (this.accidental) accidentalSomewhere = true;
-                })
                 if (note.note_heads) {
                     for (var j = 0; j < note.note_heads.length; j++) {
                         var noteHead = note.note_heads[j];
                         var supposedPosition = parseInt(svgPosition.left);
-                        var thisIsAnAccidental = accidentalSomewhere && noteHead.x - supposedPosition < 40 && supposedPosition < noteHead.x;
+                        var thisIsAnAccidental = note.keyProps[j].accidental && noteHead.x - supposedPosition < 40 && supposedPosition < noteHead.x;
+                        if (noteHead.isDisplaced()) {
+                            console.log();
+                        }
                         if (((!noteHead.taken && (supposedPosition === parseInt(noteHead.x) 
                                 || (noteHead.isDisplaced() && Math.abs(supposedPosition - noteHead.x) < 15)))
-                                || 0) 
-                                && (svgPosition.width > 5 && svgPosition.height > 5)) {
+                                || thisIsAnAccidental && note.keyProps[j].accidental) 
+                                && (svgPosition.width > 5 && svgPosition.height > 8)) {
                                     var noteIncrementer = note.keys.length - 1 - j; // !!! note names must be ordered low->high in score file 
                                     if (note.stem_direction == 1) {
                                         noteIncrementer = j;
@@ -300,8 +300,8 @@ function Score(containingDiv, processingDiv, currentMeasure, end) {
     }
 }
 
-function note(keys_arg, duration_arg, clef_arg) {
-    var note = new vf.StaveNote({ keys: keys_arg, duration: duration_arg, clef: clef_arg });
+function note(keys_arg, duration_arg, clef_arg, sd_arg) {
+    var note = new vf.StaveNote({ keys: keys_arg, duration: duration_arg, clef: clef_arg, stem_direction: sd_arg});
     for (var i = 0; i < keys_arg.length; i++) {
         var accidental = note.keyProps[i].accidental;
         if (accidental) {
