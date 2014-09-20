@@ -1,6 +1,7 @@
 "use strict";
 
 var TIME_SIGNATURE = "C";
+var NUMERICAL_TIME_SIGNATURE = "4/4";
 var MEASURE_COUNT = 13;
 var KEY_SIGNATURE = "Cm";
 var TITLE = "Pr&eacute;lude";

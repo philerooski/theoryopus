@@ -12,6 +12,12 @@ header, #composer {
     text-align: center;
 }
 
+audio {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+}
+
 #title {
     font-size: xx-large;
     margin-bottom: -10px;

@@ -23,8 +23,9 @@ this.drawSummary = function() {
             + "<li><strong>Primary Key:</strong> " + KEY_SIGNATURE + "</li>"
             + "<li><strong>Tempo:</strong> " + TEMPO + "</li>"
             + "<li><strong>Form:</strong> " + FORM + "</li>"
-            + "<li><strong>Primary Time Signature:</strong> " + TIME_SIGNATURE + "</li>"
-            + "<li><strong>Total Measures:</strong> " + MEASURE_COUNT + "</li></ul></div>");
+            + "<li><strong>Primary Time Signature:</strong> " + NUMERICAL_TIME_SIGNATURE + "</li>"
+            + "<li><strong>Total Measures:</strong> " + MEASURE_COUNT + "</li></ul></div>")
+            $("body").append("<audio src='http://javanese.imslp.info/files/imglnks/usimg/6/6a/IMSLP110304-PMLP02344-25_Chopin-_Prelude_no._20_in_C_minor.mp3' controls></audio>");
     // TODO: quit hacking and just type out all the margin and border styles
     $("#programnotes, #quickfacts").css("width", parseInt($(window).width()/2 - 40)); 
 }
@@ -38,12 +39,76 @@ this.windowKeyUp = function(e) {
 
 this.loadComments = function(tableID) {
    $.ajax({
-        url: "annotations.php?table_id=" . tableID, 
+        type: "GET",
+        url: "annotations.php", 
+        data: {
+            table_id: TABLE_ID
+        },
+        dataType: "json",
         complete: self.displayComments
     });  
 }
+
+var fakejax = [{"text":"The world's first comment!","category":"melody","clef":"treble","measure":"0","voice":"0","index":"0","paths":"[11,12,13,14,15,16,17,18,19,20]"},{"text":"The world's second comment :)","category":"harmony","clef":"treble","measure":"0","voice":"0","index":"3","paths":"[25,26,27,28,29,30,31,33,35]"},{"text":"Music is like, my life.","category":"rhythm","clef":"treble","measure":"1","voice":"0","index":"3","paths":"[68]"},{"text":"Mine too!","category":"form","clef":"treble","measure":"1","voice":"0","index":"3","paths":"[68]"},{"text":"Bass comments for all the baes out there.","category":"none","clef":"bass","measure":"1","voice":"0","index":"3","paths":"[95]"},{"text":"A comment on the second line, say wha?!?!?!?!","category":"rhythm","clef":"bass","measure":"5","voice":"0","index":"2","paths":"[271]"}];
 this.displayComments = function(xhr, status) {
-     console.log(xhr.responseText);
+    var json = fakejax; // JSON.parse(xhr.responseText);
+    $(json).each(function() {
+        var text = this.text;  
+        var category = this.category;
+        var clef = this.clef;
+        var measure = this.measure;
+        var voice = this.voice;
+        var index = this.index;
+        var pathIndices = JSON.parse(this.paths).sort(function(a, b) {
+            return a - b;
+        });
+        var notes = $("path");        
+        var anchor;
+        for (var i = 0; i < notes.length; i++) {
+            var noteData = $(notes[i]).data();
+            if (noteData.clef == clef && noteData.measure == measure && noteData.voice == voice && noteData.index == index) {
+                anchor = notes[i];
+                break;
+            }
+        }
+        var danchor = $(anchor).data();
+        var locationData = {
+            "clef": danchor.clef,
+            "measure": danchor.measure,
+            "voice": danchor.voice,
+            "index": danchor.index 
+        }
+        var containingElement = $("#" + clef + "_" + $(anchor).data().line)[0];
+        var listContainer = self.buildAnnotationList(containingElement, anchor, locationData);
+        var list = listContainer.children[0];
+        self.sortByX(listContainer, containingElement);
+        var paths = [];
+        var currentlyLookingFor = 0;
+        $("path").each(function() {
+            if (pathIndices.length != currentlyLookingFor && $(this).data().id == pathIndices[currentlyLookingFor]) {
+                paths.push(this);
+                currentlyLookingFor++;
+            }
+        });
+        var li = self.createLi(text, category);
+        self.assignAnnotationHoverHandlers(li, paths);
+        list.appendChild(li);
+        containingElement.appendChild(listContainer);
+    });
+    $(".annotationcontainer").each(function() {
+        var lists = this.children;
+        var container = this;
+        $(lists).each(function() {
+            if (container.id.indexOf("treble" != -1)) {
+                self.adjustAnnotationHeight(this, "bottom");
+            } else if (container.id.indexOf("bass") != -1) {
+                self.adjustAnnotationHeight(this, "top");
+            }
+        });
+    });
+    $(".annotationcontainer").each(function() {
+        self.tightWrapAnnotations(this);
+    });
 }
 
 this.checkForScoreDrag = function(e) {
@@ -322,69 +387,13 @@ this.createAnnotation = function(paths) {
 				return null;
 			}
 
-			// ^if not we better build a wrapper for the new annotation
-			var buildList = function() {
-				listcontainer = document.createElement("div");
-				listcontainer.classList.add("listannotation");
-				listcontainer.style.left = parseInt(firstPath.getBoundingClientRect().left) + "px";
-				listcontainer.style.top = containingElement.offsetTop + "px";
-				// sort in dom
-				var children = containingElement.children;
-				if (children.length) {
-					var inserted = false;
-					for (var i = children.length - 1; i >= 0; i--) {
-						if (parseInt(children[i].style.left) < parseInt(firstPath.getBoundingClientRect().left)) {
-							containingElement.insertBefore(listcontainer, children[i].nextSibling);
-							inserted = true;
-							break;
-						}
-					}
-					if (!inserted) {
-						containingElement.insertBefore(listcontainer, containingElement.firstChild);
-					}
-				} else {
-					containingElement.appendChild(listcontainer);
-				}
-				list = document.createElement("ol");
-				listcontainer.appendChild(list);
-				var annotationLocation = locationData;
-				annotationLocation.list = list;
-				annotations.push(annotationLocation);
-			}
-
-			var listcontainer;
 			var list = existingList();
-			var note = document.createElement("li");
-			note.innerHTML = textarea.value;
-
-			if (!list) buildList();
-
+                        var listContainer = self.buildAnnotationList(containingElement, firstPath, locationData);
+			if (!list) list = listContainer.children[0];
+                        self.sortByX(listContainer, containingElement);
+			var note = self.createLi(textarea.value, thisCategory);
 			list.appendChild(note);
-			note.classList.add(thisCategory);
-			if (thisCategory == "melody" ||  thisCategory == "rhythm") {
-				note.classList.add("categoryhighlight");
-			}
-			var notesSelected = currentSelection.slice(0);
-			var indicesSelected = []; 
-			if (notesSelected.length) {
-				$(note).hover(function() {
-					$(notesSelected).each(function() {
-						$(this).attr("fill", "blue");
-					});
-				}, function() {
-					$(notesSelected).each(function() {
-						$(this).attr("fill", "black");
-					});
-				});
-				$(notesSelected).each(function() {
-					indicesSelected.push($(this).data("id"));
-					$(this).hover(function() {
-						note.classList.add("annotationhighlight");
-					}, function() {
-						note.classList.remove("annotationhighlight");
-					});
-				});
-			}
+			var indicesSelected = self.assignAnnotationHoverHandlers(note, currentSelection); 
                         var ajaxTest = {
                             "measure": parseInt(locationData.measure),
                             "voice": parseInt(locationData.voice),
@@ -393,7 +402,7 @@ this.createAnnotation = function(paths) {
                         if (ajaxTest.measure == NaN || ajaxTest.voice == NaN || ajaxTest.index == NaN) {
                             console.log("this note isn't valid");
                         }
-			$.ajax({
+			$. ajax({
 				type:"POST",
 				url: "annotations.php",
 				data: {
@@ -406,6 +415,7 @@ this.createAnnotation = function(paths) {
                                         "category": thisCategory,
                                         "table": TABLE_ID
 				},
+                                complete: self.checkAnnotationStatus
 			});  
 
 			// sort on screen
@@ -427,14 +437,82 @@ this.createAnnotation = function(paths) {
 		}
 	});
 }
+
+this.createLi = function (text, category) {
+    var li = document.createElement("li");
+    li.innerHTML = text;
+    li.classList.add(category);
+    if (category == "melody" || category == "rhythm") {
+        li.classList.add("categoryhighlight");
+    }
+    return li;
+}
+
+this.assignAnnotationHoverHandlers = function(li, notesSelected) {
+    $(li).hover(function() {
+        $(notesSelected).each(function() {
+            $(this).attr("fill", "blue");
+        });
+    }, function() {
+        $(notesSelected).each(function() {
+            $(this).attr("fill", "black");
+        });
+    });
+    var indicesSelected = [];
+    $(notesSelected).each(function() {
+        indicesSelected.push($(this).data("id"));
+        $(this).hover(function() {
+            li.classList.add("annotationhighlight");
+        }, function() {
+            li.classList.remove("annotationhighlight");
+        });
+    });
+    return indicesSelected;
+}
+
+this.sortByX = function(toInsert, containingElement) {
+    var children = containingElement.children;
+    if (children.length) {
+        var inserted = false;
+        for (var i = children.length - 1; i >= 0; i--) {
+            if (parseInt(children[i].style.left) < parseInt(toInsert.style.left)) {
+                containingElement.insertBefore(toInsert, children[i].nextSibling);
+                inserted = true;
+                break;
+            }
+        }
+        if (!inserted) {
+            containingElement.insertBefore(toInsert, containingElement.firstChild);
+        }
+    } else {
+        containingElement.appendChild(toInsert);
+    }
+}
+/* builds a wrapper for ol that contains annotations
+ * containingElement: parent of wrapper
+ * anchor: note (<path>) that acts as an anchor and determines position of container
+ * locationData: {clef,measure,voice,index}
+ */
+this.buildAnnotationList = function(containingElement, anchor, locationData) {
+    var listContainer = document.createElement("div");
+    listContainer.classList.add("listannotation");
+    listContainer.style.left = parseInt(anchor.getBoundingClientRect().left) + "px";
+    listContainer.style.top = parseInt(containingElement.offsetTop) + "px";
+    var list = document.createElement("ol");
+    listContainer.appendChild(list);
+    locationData.list = list;
+    annotations.push(locationData);
+    return listContainer;
+}
+
 // TODO: for now, debug, but eventually error checking
-// this.checkAnnotationStatus = function(xhr, status) {
-// 	if (status != "success") {
-// 		console.log(this.status);	
-// 	} else {
-// 		console.log(xhr.responseText);
-// 	}
-// }
+this.checkAnnotationStatus = function(xhr, status) {
+	if (status != "success") {
+		console.log(this.status);	
+	} else {
+		console.log(xhr.responseText);
+	}
+}
 
 // "wraps" annotation wrappers around each other so they don't lie on top of each other
 this.adjustAnnotationHeight = function(wrapper, direction) {
@@ -545,68 +623,6 @@ this.findSVGRange = function(downX, downY, upX, upY) {
 	return targets;
 }
 
-// finds the coordinate coorresponding to a click at (x,y)
-// this.findCoord = function(x, y) {
-// 	for (var i = 0; i < coords.length; i++) {
-// 		for (var j = 0; j < coords[i].staveNote.note_heads.length; j++) {
-// 			// note_head coordinates not accurate?!?!?!
-// 			var left = coords[i].staveNote.note_heads[j].x + coords[i].staveNote.context.paper.canvas.offsetLeft - 2;
-// 			if (coords[i].staveNote.note_heads[j].displaced) left += 10;
-// 			var right = left + coords[i].staveNote.note_heads[j].width + 4;
-// 			var top = coords[i].staveNote.note_heads[j].y + coords[i].staveNote.context.paper.canvas.offsetTop - 7;
-// 			var bottom = top + 12;
-// 			if (left < x && right > x && top < y && bottom > y) {
-// 				return coords[i];
-// 			}
-// 		}
-// 	} 
-// }
-
-// matches the entire svg note coorresponding to the passed coordinate
-// this.noteMatch = function(pathIndex, coord) {
-// 	var neighborHeads = coord.staveNote.note_heads;
-// 	var paths = $("path");
-// 	var lastIndex = -1;
-// 	var numAccidentals = 0;
-// 	var targets = [];
-// 	for (var n = 0; n < neighborHeads.length; n++) {
-// 		var left = neighborHeads[n].x + coord.staveNote.context.paper.canvas.offsetLeft - 2;
-// 		if (neighborHeads[n].displaced) left += 10;
-// 		var right = left + neighborHeads[n].width + 4;
-// 		var top = neighborHeads[n].y + coord.staveNote.context.paper.canvas.offsetTop - 7;
-// 		var bottom = top + 12;
-// 		var verticalCenter = (top + bottom) / 2;
-// 		var horizontalCenter = (left + right) / 2;
-// 		if (coord.staveNote.keyProps[n].accidental && coord.staveNote.keyProps[n].accidental.length) numAccidentals++;
-// 		var closest = 20;
-// 		var closestPath;
-// 		pathIndex = (pathIndex < 10) ? 10 : pathIndex;
-// 		pathIndex = (pathIndex + 10 >= paths.length) ? (paths.length - 11) : pathIndex;
-// 		for (var i = pathIndex - 10; i < pathIndex + 10; i++) {
-// 			var bb = paths[i].getBoundingClientRect();
-// 			var pathTop = parseInt(bb.top + window.scrollY);
-// 			var pathLeft = parseInt(bb.left + window.scrollX);
-// 			var pathBottom = parseInt(bb.bottom + window.scrollY);
-// 			var pathRight = parseInt(bb.right + window.scrollX);
-// 			if (pathRight - pathLeft > 8 && pathRight - pathLeft < 15) {
-// 				var horizontalPathCenter = (pathLeft + pathRight) / 2;
-// 				var verticalPathCenter = (pathTop + pathBottom) / 2;
-// 				var thisDistance = Math.abs(verticalCenter - verticalPathCenter) + Math.abs(horizontalCenter - horizontalPathCenter);
-// 				if (thisDistance < closest) { 
-// 					closestPath = i;
-// 					closest = thisDistance; 
-// 				}
-// 			}
-// 		}
-// 		targets.push(paths[closestPath]);
-// 		if (closestPath > lastIndex) lastIndex = closestPath;
-// 	}
-// 	for (var j = 0; j < numAccidentals; j++) {
-// 		targets.push(paths[lastIndex + j + 1]);
-// 	}
-// 	return targets;
-//}
-
 // find an individual svg at the coordinate (x,y) to use as reference when finding other svgs in the chord
 this.findSVG = function(x, y) {
 	var paths = $("path");
@@ -619,13 +635,14 @@ this.findSVG = function(x, y) {
 		if (x <= right && x >= left && y >= top && y <= bottom && right - left < 15 && right - left > 8) {
                     var selectData = $(paths[i]).data();
                     var neighbors = [paths[i]];
-                    paths.each(function() {
-                       var d = $(this).data();
-                       if (d.clef == selectData.clef && d.measure == selectData.Measures
-                           && d.voice == selectData.voice && d.index == selectData.index) {
-                                neighbors.push(this);
-                            }
-                    });
+                    // TODO: make one click chord selection a thing
+                    // paths.each(function() {
+                    //    var d = $(this).data();
+                    //    if (d.clef == selectData.clef && d.measure == selectData.measure
+                    //        && d.voice == selectData.voice && d.index == selectData.index) {
+                    //             neighbors.push(this);
+                    //         }
+                    // });
                     return neighbors;
 		}
 	}
