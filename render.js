@@ -29,7 +29,7 @@ function Score(containingDiv, processingDiv, currentMeasure, end) {
         $(containingDiv).append("<div id='line_" + lineNum + "'></div>");
         i++;
         DisplayCommentLine(CLEFS[1]);
-        // $(containingDiv).append("<hr></hr>"); Do we need to seperate each comment container with an hr?
+        $(containingDiv).append("<hr></hr>"); 
         var paper = document.getElementById("line_" + lineNum);
         renderer = new vf.Renderer(paper, vf.Renderer.Backends.RAPHAEL);
         ctx = renderer.getContext();
@@ -245,22 +245,32 @@ function Score(containingDiv, processingDiv, currentMeasure, end) {
             var svgPosition = this.getBoundingClientRect();
             for (var i = 0; i < notes.length; i++) {
                 var note = notes[i];
+                var accidentalSomewhere;
+                $(note.keyProps).each(function() {
+                    if (this.accidental) accidentalSomewhere = true;
+                })
                 if (note.note_heads) {
                     for (var j = 0; j < note.note_heads.length; j++) {
-                        if (!note.note_heads[j].taken && parseInt(svgPosition.left) === parseInt(note.note_heads[j].x)) {
-                            var noteIncrementer = note.keys.length - 1 - j; // !!! note names must be ordered low->high in score file 
-                            if (note.stem_direction == 1) {
-                                noteIncrementer = j;
-                            }
-                            $(this).data({
-                                "index": i,
-                                "note": note.keys[noteIncrementer],
-                                "accidental": note.keyProps[j].accidental,
-                                "duration": note.duration
-                            });
-                            note.note_heads[j].taken = true;
-                            break;
-                        }
+                        var noteHead = note.note_heads[j];
+                        var supposedPosition = parseInt(svgPosition.left);
+                        var thisIsAnAccidental = accidentalSomewhere && noteHead.x - supposedPosition < 40 && supposedPosition < noteHead.x;
+                        if (((!noteHead.taken && (supposedPosition === parseInt(noteHead.x) 
+                                || (noteHead.isDisplaced() && Math.abs(supposedPosition - noteHead.x) < 15)))
+                                || 0) 
+                                && (svgPosition.width > 5 && svgPosition.height > 5)) {
+                                    var noteIncrementer = note.keys.length - 1 - j; // !!! note names must be ordered low->high in score file 
+                                    if (note.stem_direction == 1) {
+                                        noteIncrementer = j;
+                                    }
+                                    $(this).data({
+                                        "index": i,
+                                        "note": note.keys[noteIncrementer],
+                                        "accidental": note.keyProps[j].accidental,
+                                        "duration": note.duration
+                                    });
+                                    if (!thisIsAnAccidental) noteHead.taken = true;
+                                    break;
+                                }
                     }
                 }
             }
@@ -315,13 +325,7 @@ function tie(clef, beginMeasure, beginVoice, beginChord, beginNote, endMeasure, 
 }
 
 function voice() {
-    var timeSig;
-    if (TIME_SIGNATURE == "C") {
-        timeSig = "4/4";
-    } else {
-        timeSig = TIME_SIGNATURE;
-    }
-    var timeSig = timeSig.split("/");
+    var timeSig = NUMERICAL_TIME_SIGNATURE.split("/");
     return new vf.Voice({
         num_beats: timeSig[0],
            beat_value: timeSig[1],

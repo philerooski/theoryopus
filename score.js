@@ -636,13 +636,13 @@ this.findSVG = function(x, y) {
                     var selectData = $(paths[i]).data();
                     var neighbors = [paths[i]];
                     // TODO: make one click chord selection a thing
-                    // paths.each(function() {
-                    //    var d = $(this).data();
-                    //    if (d.clef == selectData.clef && d.measure == selectData.measure
-                    //        && d.voice == selectData.voice && d.index == selectData.index) {
-                    //             neighbors.push(this);
-                    //         }
-                    // });
+                    paths.each(function() {
+                       var d = $(this).data();
+                       if (d.clef == selectData.clef && d.measure == selectData.measure
+                           && d.voice == selectData.voice && d.index == selectData.index) {
+                                neighbors.push(this);
+                            }
+                    });
                     return neighbors;
 		}
 	}
