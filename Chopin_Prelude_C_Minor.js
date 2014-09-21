@@ -35,7 +35,7 @@ var treble = {
     voice().addTickables(
             [
             new vf.GhostNote("2"),
-            note(["g/3", "bn/3"], "4").setStemDirection(-1),
+            note(["g/3", "bn/3"], "4", "treble", -1),
             new vf.GhostNote("4")
             ] 
             ),

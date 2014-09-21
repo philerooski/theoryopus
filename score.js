@@ -40,12 +40,16 @@ function View(containingDiv, TABLE_ID) {
     this.loadComments = function(tableID) {
         $.ajax({
             type: "GET",
-        url: "annotations.php", 
-        data: {
-            table_id: TABLE_ID
-        },
-        dataType: "json",
-        complete: self.displayComments
+            url: "annotations.php", 
+            data: {
+                table_id: TABLE_ID
+            },
+            dataType: "json",
+            beforeSend: function() {
+                $("body").append("<div id='loadingcomments'>Loading Comments . . .</div>");
+                self.blink("#loadingcomments", 9999);
+            },
+            complete: self.displayComments
         });  
     }
 
@@ -109,6 +113,7 @@ function View(containingDiv, TABLE_ID) {
         $(".annotationcontainer").each(function() {
             self.tightWrapAnnotations(this);
         });
+        $("#loadingcomments").remove();
     }
 
     this.checkForScoreDrag = function(e) {
@@ -599,6 +604,16 @@ function View(containingDiv, TABLE_ID) {
             .animate({top: '+=2', left: '+=2'}, 25, function(){
                 if (count > 0) {
                     self.jiggle(item, count - 1);
+                }
+            });
+    }
+
+    this.blink = function(item, count) {
+        $(item)
+            .animate({opacity: '-=1'}, 1000)
+            .animate({opacity: '+=1'}, 1000, function() {
+                if (count > 0) {
+                    self.blink(item, count - 1);
                 }
             });
     }
