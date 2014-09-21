@@ -2,9 +2,8 @@
 
 // renders a score notated in js/VexFlow to the user's screen
 // author: Phil Snyder
-
 var STAVE = {
-    "x": 10,
+    "x": 20,
     "verticalPadding": 140,
     "clefOffset": 20,
     "timeSigOffset": 25,
@@ -101,6 +100,7 @@ function Score(containingDiv, processingDiv, currentMeasure, end) {
             }
             var voicesWidth =  LineMeasuresVoicesWidth[currentLineMeasure] + spareChange;
             var staveWidth = LineMeasuresStaveWidth[currentLineMeasure] + spareChange;
+            var thisIsTheLastMeasure;
             for (var i = 0; i < CLEFS.length; i++) {
                 var currentStave = new vf.Stave(STAVE.x + lineWidthSoFar, 
                         i == 0 ? STAVE.verticalPadding/5 : i * STAVE.verticalPadding, staveWidth);
@@ -111,7 +111,7 @@ function Score(containingDiv, processingDiv, currentMeasure, end) {
                                 currentStave.addEndClef(this.clef, this.size);
                             }
                         }
-                    })    
+                    });    
                 }
                 if (!currentLineMeasure) {
                     currentStave.addClef(CLEFS[i].clefType); 
@@ -123,11 +123,29 @@ function Score(containingDiv, processingDiv, currentMeasure, end) {
                     currentStave.clef = CLEFS[i].clefType;
                 }
                 currentStave.setContext(ctx).draw(); 
-                if (!CLEFS[0]["m" + (currentMeasure + 1)]) {
-                    new vf.Barline(vf.Barline.type.END, currentStave.width + STAVE.x).draw(currentStave);
-                }
                 grandStaff.push(currentStave);
+                if (!CLEFS[0]["m" + (currentMeasure + 1)]) {
+                    currentStave.setEndBarType(vf.Barline.type.END);
+                    thisIsTheLastMeasure = true;
+                }
             }
+            var connector = new vf.StaveConnector(grandStaff[0], grandStaff[1]);
+            if (thisIsTheLastMeasure) {
+                var connector2 = new vf.StaveConnector(grandStaff[0], grandStaff[1]);
+                connector2.setType(vf.StaveConnector.type.BOLD_DOUBLE_RIGHT);
+                connector2.setContext(ctx).draw();
+            } else if (!LineMeasuresStaveWidth[currentLineMeasure + 1]) {
+                var connector2 = new vf.StaveConnector(grandStaff[0], grandStaff[1]);
+                connector2.setType(vf.StaveConnector.type.SINGLE_RIGHT)
+                connector2.setContext(ctx).draw();
+            } 
+            if (currentLineMeasure == 0) {
+                var connector2 = new vf.StaveConnector(grandStaff[0], grandStaff[1]);
+                connector2.setType(vf.StaveConnector.type.BRACE);
+                connector2.setContext(ctx).draw();
+            }
+            connector.setType(vf.StaveConnector.type.SINGLE);
+            connector.setContext(ctx).draw();
             self.drawNotes(CLEFS, grandStaff, currentMeasure, voicesWidth);
             grandStaff = [];
             currentMeasure++;
@@ -173,11 +191,14 @@ function Score(containingDiv, processingDiv, currentMeasure, end) {
                 } else {
                     allJoinedVoices[currentClef.partName] = [this];
                 }
-                if (!this.tickables[0].keys) {
-                    $(this.tickables).each(function() {
-                        this.setContext(ctx);
-                    });
-                }
+                $(this.tickables).each(function() {
+                    this.setContext(ctx);
+                    if (this.decrescendo != undefined) {
+                        // var tickContext = this.getTickContext();
+                        // var nextContext = vf.tickContext.getNextContext(tickContext);
+                        // nextContext.x = this.stave.x + this.stave.width;
+                    }
+                });
             }) 
             allVoices = allVoices.concat(this["m" + measure]);
         });
@@ -185,7 +206,6 @@ function Score(containingDiv, processingDiv, currentMeasure, end) {
         for (var key in allJoinedVoices) {
             formatter.joinVoices(allJoinedVoices[key]);
         }
-        // formatter.createModifierContexts(allVoices);
         formatter.format(allVoices, voicesWidth - STAVE.notePadding);
         $(allVoices).each(function() {
             var currentVoice = this;

@@ -40,8 +40,8 @@ var treble = {
             ] 
             ),
     voice().addTickables([
-            new vf.TextNote({
-                glyph: "f", duration: "1"
+            new vf.TextDynamics({
+                text: "ff", duration: "1"
             }).setLine(12)
             ])
         ],
@@ -104,7 +104,7 @@ var treble = {
                 note(["e/4", "g/4", "e/5"], "4"),
                 note(["e/4", "a/4", "e/5"], "4"),
                 note(["d/4", "d/5"], "4"),
-                note(["d/4", "a/4", "d/5"], "4")
+                note(["d/4", "g/4", "d/5"], "4")
                 ]),
     voice().addTickables([
             new vf.GhostNote("2"),    
@@ -113,8 +113,8 @@ var treble = {
             new vf.GhostNote("4")
             ]),
     voice().addTickables([
-            new vf.TextNote({
-                glyph: "p", duration: "1"
+            new vf.TextDynamics({
+                text: "p", duration: "1"
             }).setLine(11)
             ])
         ],
@@ -123,7 +123,7 @@ var treble = {
                 note(["c/4", "g/4", "c/5"], "4"),
                 note(["c/4", "d/4", "f#/4", "d/5"], "4"),
                 note(["d/4", "g/4", "bn/4"], "8d"),
-                note(["c/4", "a/4"], "16"),
+                note(["c/4", "an/4"], "16"),
                 note(["bn/3", "d/4", "g/4"], "4")
                 ])
         ],
@@ -160,13 +160,18 @@ var treble = {
                 note(["e/4", "g/4", "e/5"], "4").addAnnotation(2, new vf.Annotation("(a tempo)")),
                 note(["e/4", "a/4", "e/5"], "4"),
                 note(["d/4", "d/5"], "4"),
-                note(["d/4", "a/4", "d/5"], "4"),
+                note(["d/4", "g/4", "d/5"], "4"),
                 ]),
     voice().addTickables([
             new vf.GhostNote("2"),    
             note(["a/4"], "8d"),
             note(["f#/4"], "16"),
             new vf.GhostNote("4")
+            ]),
+    voice().addTickables([
+            new vf.TextDynamics({
+                text: "pp", duration: "1"
+            }).setLine(11)
             ])
         ],
     m9: [
@@ -174,7 +179,7 @@ var treble = {
                 note(["c/4", "g/4", "c/5"], "4"),
                 note(["c/4", "d/4", "f#/4", "d/5"], "4"),
                 note(["d/4", "g/4", "bn/4"], "8d"),
-                note(["c/4", "a/4"], "16"),
+                note(["c/4", "an/4"], "16"),
                 note(["bn/3", "d/4", "g/4"], "4")
                 ])
         ],
@@ -208,11 +213,12 @@ var treble = {
         ],
     m12: [
         voice().addTickables([
-                note(["c/4", "e/4", "g/4", "c/5"], "1")
+                note(["c/4", "e/4", "g/4", "c/5"], "1").addModifier(0, new vf.Articulation("a@a").setPosition(vf.Modifier.Position.ABOVE))
+                .addModifier(0, new vf.Articulation("a>").setYShift(-15))
                 ]),
     voice().addTickables([
-            new vf.TextNote({
-                glyph: "p", duration: "1"
+            new vf.TextDynamics({
+                text: "p", duration: "1"
             }).setLine(11)
             ])
         ]
@@ -333,7 +339,7 @@ var bass = {
         ],
     m12: [
         voice().addTickables([
-                note(["c/3", "g/3"], "1", "bass")
+                note(["c/3", "g/3"], "1", "bass").addModifier(0, new vf.Articulation("a@a").setPosition(vf.Modifier.Position.ABOVE))
                 ])
         ]
 }
