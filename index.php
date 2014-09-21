@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Vexflow Test Page</title>
+    <title>TheoryOpus Test Page</title>
     <link rel="stylesheet" type="text/css" href="style.css">
     <script src="jquery.min.js"></script>
     <script type="text/javascript" src="raphael.js"></script>

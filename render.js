@@ -251,26 +251,27 @@ function Score(containingDiv, processingDiv, currentMeasure, end) {
                         var noteHead = note.note_heads[j];
                         var supposedPosition = parseInt(svgPosition.left);
                         var thisIsAnAccidental = note.keyProps[j].accidental && noteHead.x - supposedPosition < 40 && supposedPosition < noteHead.x;
+                        // var thisIsAStem = (Math.abs(supposedPosition - noteHead.x) < 15 && svgPosition.width * 8 < svgPosition.height);
                         if (noteHead.isDisplaced()) {
                             console.log();
                         }
                         if (((!noteHead.taken && (supposedPosition === parseInt(noteHead.x) 
-                                || (noteHead.isDisplaced() && Math.abs(supposedPosition - noteHead.x) < 15)))
-                                || thisIsAnAccidental && note.keyProps[j].accidental) 
-                                && (svgPosition.width > 5 && svgPosition.height > 8)) {
-                                    var noteIncrementer = note.keys.length - 1 - j; // !!! note names must be ordered low->high in score file 
-                                    if (note.stem_direction == 1) {
-                                        noteIncrementer = j;
-                                    }
-                                    $(this).data({
-                                        "index": i,
-                                        "note": note.keys[noteIncrementer],
-                                        "accidental": note.keyProps[j].accidental,
-                                        "duration": note.duration
-                                    });
-                                    if (!thisIsAnAccidental) noteHead.taken = true;
-                                    break;
+                            || (noteHead.isDisplaced() && Math.abs(supposedPosition - noteHead.x) < 15))) // is a !taken note
+                            || thisIsAnAccidental && note.keyProps[j].accidental) // or accidental 
+                            && (svgPosition.width > 5 && svgPosition.height > 8 && svgPosition.width * 5 > svgPosition.height)) { // and has note-like dimension
+                                var noteIncrementer = note.keys.length - 1 - j; // !!! note names must be ordered low->high in score file 
+                                if (note.stem_direction == 1) {
+                                    noteIncrementer = j;
                                 }
+                                $(this).data({
+                                    "index": i,
+                                    "note": note.keys[noteIncrementer],
+                                    "accidental": note.keyProps[j].accidental,
+                                    "duration": note.duration
+                                });
+                                if (!thisIsAnAccidental) noteHead.taken = true;
+                                break;
+                            }
                     }
                 }
             }
