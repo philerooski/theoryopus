@@ -257,9 +257,6 @@ function Score(containingDiv, processingDiv, currentMeasure, end) {
 
     this.voiceDraw = function(context, stave, thisVoice, clef, measure, thisVoiceCount, line) {
         var theseSVGs = $("#line_" + line).find("path");
-        //TODO: how the hell do I group chords without using the convoluted coord system??!?!?!?!
-        // friendly hint from a past Phil: big block chords will have horizontal overlap in note head paths,
-        // regular triadic type stuff will have equavilant left/right properties
         var notes = thisVoice.tickables;
         theseSVGs.each(function() {
             var svgPosition = this.getBoundingClientRect();

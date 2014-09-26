@@ -18,6 +18,26 @@ audio {
     right: 10px;
 }
 
+a[data-wiki] {
+    text-decoration: underline;
+}
+
+.hoverframe {
+    position: absolute;
+    text-align: justify;
+    max-width: 400px;
+    background: beige;
+    border: 2px solid black;
+    border-radius: 10px;
+    line-height: 130%;
+}
+
+.hoverframe img {
+    float: right;
+    padding-left: 10px;
+    padding-bottom: 5px;
+}
+
 #loadingcomments {
     position: fixed;
     top: 5px;
@@ -59,7 +79,8 @@ audio {
 }
 
 tspan {
-    font-family: "Lucida Calligraphy", cursive;
+    font-family: monospace;
+    font-style: italic;
 }
 
 #processing {
@@ -71,7 +92,7 @@ strong {
     font-size: medium;
 }
 
-.listannotation ol > li, .annotationcreator textarea {
+.listannotation ol > li, .annotationcreator textarea, .hoverframe {
 	padding: 10px;
 }
 

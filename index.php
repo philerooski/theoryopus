@@ -8,6 +8,8 @@
     <script type="text/javascript" src="vexflow-min.js"></script>
     <script type="text/javascript" src="render.js"></script>
     <script type="text/javascript" src="score.js"></script>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <meta charset="UTF-8">
 <?php
 if (!isset($_SERVER["REQUEST_METHOD"]) || $_SERVER["REQUEST_METHOD"] != "GET" || !$_GET["score"]) {
 ?>

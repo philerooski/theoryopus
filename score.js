@@ -29,6 +29,7 @@ function View(containingDiv, TABLE_ID) {
         // TODO: quit hacking and just type out all the margin and border styles
         $("#programnotes, #quickfacts").css("width", parseInt($(window).width()/2 - 40)); 
     }
+    
     this.windowKeyUp = function(e) {
         if (e.keyCode == 27) { // esc
             $(".annotationcreator").remove();
@@ -53,7 +54,6 @@ function View(containingDiv, TABLE_ID) {
         });  
     }
 
-    /*var fakejax = [{"text":"The world's first comment!","category":"melody","clef":"treble","measure":"0","voice":"0","index":"0","paths":"[11,12,13,14,15,16,17,18,19,20]"},{"text":"The world's second comment :)","category":"harmony","clef":"treble","measure":"0","voice":"0","index":"3","paths":"[25,26,27,28,29,30,31,33,35]"},{"text":"Music is like, my life.","category":"rhythm","clef":"treble","measure":"1","voice":"0","index":"3","paths":"[68]"},{"text":"Mine too!","category":"form","clef":"treble","measure":"1","voice":"0","index":"3","paths":"[68]"},{"text":"Bass comments for all the baes out there.","category":"none","clef":"bass","measure":"1","voice":"0","index":"3","paths":"[95]"},{"text":"A comment on the second line, say wha?!?!?!?!","category":"rhythm","clef":"bass","measure":"5","voice":"0","index":"2","paths":"[271]"}];*/
     this.displayComments = function(xhr, status) {
         var json = JSON.parse(xhr.responseText);
         $(json).each(function() {
@@ -63,9 +63,8 @@ function View(containingDiv, TABLE_ID) {
             var measure = this.measure;
             var voice = this.voice;
             var index = this.index;
-            var pathIndices = JSON.parse(this.paths).sort(function(a, b) {
-                return a - b;
-            });
+            // TODO: doing this twice shouldn't be necessary... or is it?
+            var paths = JSON.parse(JSON.parse(this.paths));
             var notes = $("path");        
             var anchor;
             for (var i = 0; i < notes.length; i++) {
@@ -86,16 +85,21 @@ function View(containingDiv, TABLE_ID) {
             var listContainer = self.buildAnnotationList(containingElement, anchor, locationData);
             var list = listContainer.children[0];
             self.sortByX(listContainer, containingElement);
-            var paths = [];
-            var currentlyLookingFor = 0;
-            $("path").each(function() {
-                if (pathIndices.length != currentlyLookingFor && $(this).data().id == pathIndices[currentlyLookingFor]) {
-                    paths.push(this);
-                    currentlyLookingFor++;
-                }
-            });
             var li = self.createLi(text, category);
-            self.assignAnnotationHoverHandlers(li, paths);
+            var notesSelected = [];
+            $(paths).each(function() {
+                var clef = this.clef;
+                var measure = this.measure;
+                var voice = this.voice;
+                var index = this.index;
+                $("path").each(function() {
+                    var d = $(this).data();
+                    if (d.note && d.clef === clef && d.measure === measure && d.voice === voice && d.index === index) {
+                        notesSelected.push(this);
+                    }
+                });
+            });
+            self.assignAnnotationHoverHandlers(li, notesSelected);
             list.appendChild(li);
             containingElement.appendChild(listContainer);
         });
@@ -103,9 +107,9 @@ function View(containingDiv, TABLE_ID) {
             var lists = this.children;
             var container = this;
             $(lists).each(function() {
-                if (container.id.indexOf("treble" != -1)) {
+                if (container.id.indexOf("treble") != -1) {
                     self.adjustAnnotationHeight(this, "bottom");
-                } else if (container.id.indexOf("bass") != -1) {
+                } else {
                     self.adjustAnnotationHeight(this, "top");
                 }
             });
@@ -114,6 +118,10 @@ function View(containingDiv, TABLE_ID) {
             self.tightWrapAnnotations(this);
         });
         $("#loadingcomments").remove();
+        $("a[data-wiki]").each(function() {
+            var topic = $(this).attr("data-wiki");
+            self.getWiki(topic);
+        });
     }
 
     this.checkForScoreDrag = function(e) {
@@ -203,8 +211,8 @@ function View(containingDiv, TABLE_ID) {
                     $(".annotationcreator").remove();
                 } else {
                     $("path").attr("fill", "black");
+                    currentSelection = SVGnote;
                     self.createAnnotation(SVGnote);
-                    currentSelection.push(SVGnote);
                 }
                 $(SVGnote).each(function() {
                     $(this).attr("fill", color);
@@ -227,7 +235,9 @@ function View(containingDiv, TABLE_ID) {
         $(paths).each(function() {
             var thisX = this.getBoundingClientRect().left;
             var thisY = this.getBoundingClientRect().top;
-            if (thisX < maxX && thisY - 200 < minY) {
+            var thisData = $(this).data();
+            if (thisX < maxX && thisY - 200 < minY && thisData.clef != undefined && thisData.measure != undefined 
+                && thisData.voice != undefined && thisData.index != undefined) {
                 firstPath = this;
                 maxX = thisX;
                 minY = thisY;
@@ -399,6 +409,7 @@ function View(containingDiv, TABLE_ID) {
                 var note = self.createLi(textarea.value, thisCategory);
                 list.appendChild(note);
                 var indicesSelected = self.assignAnnotationHoverHandlers(note, currentSelection); 
+                indicesSelected = self.removeDuplicates(indicesSelected); // sanity check
                 var ajaxTest = {
                     "measure": parseInt(locationData.measure),
                     "voice": parseInt(locationData.voice),
@@ -407,20 +418,20 @@ function View(containingDiv, TABLE_ID) {
                 if (ajaxTest.measure == NaN || ajaxTest.voice == NaN || ajaxTest.index == NaN) {
                     console.log("this note isn't valid");
                 }
-                $. ajax({
+                $.ajax({
                     type:"POST",
-                url: "annotations.php",
-                data: {
-                    "annotation": textarea.value,
-                "clef": locationData.clef,
-                "measure": parseInt(locationData.measure),
-                "voice": parseInt(locationData.voice),
-                "index": parseInt(locationData.index),
-                "paths": JSON.stringify(indicesSelected),
-                "category": thisCategory,
-                "table": TABLE_ID
-                },
-                complete: self.checkAnnotationStatus
+                    url: "annotations.php",
+                    data: {
+                        "annotation": textarea.value,
+                        "clef": locationData.clef,
+                        "measure": parseInt(locationData.measure),
+                        "voice": parseInt(locationData.voice),
+                        "index": parseInt(locationData.index),
+                        "paths": JSON.stringify(indicesSelected),
+                        "category": thisCategory,
+                        "table": TABLE_ID
+                    },
+                    complete: self.checkAnnotationStatus
                 });  
 
                 // sort on screen
@@ -453,6 +464,18 @@ function View(containingDiv, TABLE_ID) {
         return li;
     }
 
+    this.removeDuplicates = function(array) {
+        var noDuplicates = [];
+        for (var i = 0; i < array.length; i++) {
+            if (array[i + 1] && array[i] !== array[i + 1]) {
+                noDuplicates.push(array[i]);
+            } else if (!array[i + 1]) {
+                noDuplicates.push(array[i]);
+            }
+        }
+        return noDuplicates;
+    }
+
     this.assignAnnotationHoverHandlers = function(li, notesSelected) {
         $(li).hover(function() {
             $(notesSelected).each(function() {
@@ -465,7 +488,13 @@ function View(containingDiv, TABLE_ID) {
         });
         var indicesSelected = [];
         $(notesSelected).each(function() {
-            indicesSelected.push($(this).data("id"));
+            var dataObject = {};
+            var data = $(this).data();
+            dataObject.clef = data.clef;
+            dataObject.measure = data.measure;
+            dataObject.voice = data.voice;
+            dataObject.index = data.index;
+            indicesSelected.push(dataObject);
             $(this).hover(function() {
                 li.classList.add("annotationhighlight");
             }, function() {
@@ -618,6 +647,39 @@ function View(containingDiv, TABLE_ID) {
             });
     }
 
+    this.getWiki = function(topic) {
+        $.ajax({
+            type: "GET",
+            url: "wiki.php",
+            data: {
+                "topic": topic
+            },
+            complete: self.assignWiki
+        })
+    }
+    
+    this.assignWiki = function(xhr, status) {
+        var data = xhr.responseText.split("&&&&");
+        var wikiText = data[0];
+        var wikiImg = data[1];
+        var topic = data[2];
+        $("[data-wiki='" + topic + "']").hover(function() {
+            var div = document.createElement("div");
+            div.classList.add("hoverframe");
+            div.innerHTML = wikiText;
+            var refPosition = this.getBoundingClientRect();
+            div.style.top = parseInt($(this).offset().top) + "px";
+            div.style.left = parseInt($(this).offset().left + refPosition.width) + "px";
+            var img = document.createElement("img");
+            img.src = "http://" + wikiImg;
+            img.alt = topic;
+            div.insertBefore(img, div.firstChild);
+            $("body").append(div);
+        }, function() {
+            $(".hoverframe").remove();
+        });
+    }
+
     // find a set of svgs within a range of values
     this.findSVGRange = function(downX, downY, upX, upY) {
         var paths = $("path");
@@ -648,10 +710,9 @@ function View(containingDiv, TABLE_ID) {
                 var left = Math.ceil(bb.left + window.scrollX);
                 var bottom = Math.floor(bb.bottom + window.scrollY);
                 var right = Math.floor(bb.right + window.scrollX);
-                if (x <= right && x >= left && y >= top && y <= bottom && right - left < 15 && right - left > 8) {
+                if (x <= right && x >= left && y >= top && y <= bottom && right - left < 20 && right - left > 8) {
                     var selectData = $(paths[i]).data();
                     var neighbors = [paths[i]];
-                    // TODO: make one click chord selection a thing
                     paths.each(function() {
                         var d = $(this).data();
                         if (d.clef == selectData.clef && d.measure == selectData.measure
