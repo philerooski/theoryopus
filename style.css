@@ -47,11 +47,10 @@ a[data-wiki] {
 
 #title {
     font-size: xx-large;
-    margin-bottom: -10px;
 }
 
 .title {
-    font-family: fantasy;
+    font-family: "Papyrus", serif;
 }
 
 #composer {

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>TheoryOpus Test Page</title>
+    <title>TheoryOpus</title>
     <link rel="stylesheet" type="text/css" href="style.css">
     <script src="jquery.min.js"></script>
     <script type="text/javascript" src="raphael.js"></script>
@@ -13,7 +13,7 @@
 <?php
 if (!isset($_SERVER["REQUEST_METHOD"]) || $_SERVER["REQUEST_METHOD"] != "GET" || !$_GET["score"]) {
 ?>
-        <div class='error'>Try accessing this page from TODO instead.</div>
+        <div class='error'>Try accessing this page from the hyperlink I sent you instead.</div>
 <?php 
     die();
 } else {
@@ -24,7 +24,7 @@ if (!isset($_SERVER["REQUEST_METHOD"]) || $_SERVER["REQUEST_METHOD"] != "GET" ||
 <?php 
     } else {
 ?>
-            <div class="error">Sorry, we don't have that score you requested! But you're welcome to pick another one TODO</div>
+            <div class="error">Sorry, we don't have that score you requested! But you're welcome to pick another one (If we actually had another one. Teehee)</div>
 <?php
         die();
     }
@@ -37,8 +37,7 @@ if (!isset($_SERVER["REQUEST_METHOD"]) || $_SERVER["REQUEST_METHOD"] != "GET" ||
         <div></div>
     </header>    
     <div id="summarycontainer"></div>
-    <div id="score">
-    </div>
+    <div id="score"></div>
     <div id="pathpurgatory"></div>
 </body>
 </html>

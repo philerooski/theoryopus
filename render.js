@@ -2,20 +2,21 @@
 
 // renders a score notated in js/VexFlow to the user's screen
 // author: Phil Snyder
-var STAVE = {
-    "x": 20,
-    "verticalPadding": 140,
-    "clefOffset": 20,
-    "timeSigOffset": 25,
-    "notePadding": 20,
-    "minWidth": 300
-}
 
 var vf = Vex.Flow;
-var renderer;
-var ctx;
 
 function Score(containingDiv, processingDiv, currentMeasure, end) {
+    var renderer;
+    var ctx;
+    var STAVE = {
+        "x": 20,
+        "verticalPadding": 140,
+        "clefOffset": 20,
+        "timeSigOffset": 25,
+        "notePadding": 20,
+        "minWidth": 300
+    }
+    var LINE_WIDTH = parseInt($(window).width() - STAVE.x - STAVE.clefOffset);
     var self = this;
     // TODO: This code is janky as fuck
     this.initNewStaveLine = function(lineNum) {
@@ -56,7 +57,6 @@ function Score(containingDiv, processingDiv, currentMeasure, end) {
         var LineMeasuresVoicesWidth = [];
         var LineMeasuresStaveWidth = [];
         //TODO: this should really be a constant somewhere
-        var lineWidth = parseInt($(window).width() - STAVE.x - 20);
         var lineWidthSoFar = 0;
         var keySigOffset = Vex.Flow.keySignature.keySpecs[KEY_SIGNATURE].num * 10;
         var newLine = this.initNewStaveLine(currentLine);
@@ -86,12 +86,12 @@ function Score(containingDiv, processingDiv, currentMeasure, end) {
                         thisStavesWidth = STAVE.minWidth;
                         minVoicesWidth = thisStavesWidth - reservedSpace;
                     }
-                    if (measureWidthSoFar + thisStavesWidth < lineWidth) {
+                    if (measureWidthSoFar + thisStavesWidth < LINE_WIDTH) {
                         measureWidthSoFar += thisStavesWidth;
                         LineMeasuresVoicesWidth.push(minVoicesWidth);
                         LineMeasuresStaveWidth.push(thisStavesWidth);
                         measureCount++;
-                        spareChange = parseInt((lineWidth - measureWidthSoFar) / measureCount);
+                        spareChange = parseInt((LINE_WIDTH - measureWidthSoFar) / measureCount);
                     } else {
                         spaceLeft = false;
                     }
@@ -137,7 +137,7 @@ function Score(containingDiv, processingDiv, currentMeasure, end) {
             } else if (!LineMeasuresStaveWidth[currentLineMeasure + 1]) {
                 var connector2 = new vf.StaveConnector(grandStaff[0], grandStaff[1]);
                 connector2.setType(vf.StaveConnector.type.SINGLE_RIGHT)
-                connector2.setContext(ctx).draw();
+                    connector2.setContext(ctx).draw();
             } 
             if (currentLineMeasure == 0) {
                 var connector2 = new vf.StaveConnector(grandStaff[0], grandStaff[1]);
@@ -152,7 +152,7 @@ function Score(containingDiv, processingDiv, currentMeasure, end) {
             currentLineMeasure++;
             lineWidthSoFar += staveWidth;
             if (currentLineMeasure == LineMeasuresStaveWidth.length) {
-                this.organizeSVG(currentLine, lineWidth, CLEFS.length * 100, true); 
+                this.organizeSVG(currentLine, LINE_WIDTH, CLEFS.length * 100, true); 
                 $(processingDiv).children().appendTo("#line_" + currentLine + "> svg");
                 if (currentMeasure != end) {
                     currentLine++;
@@ -267,14 +267,10 @@ function Score(containingDiv, processingDiv, currentMeasure, end) {
                     for (var j = 0; j < note.note_heads.length; j++) {
                         var noteHead = note.note_heads[j];
                         var supposedPosition = parseInt(svgPosition.left);
-                        var thisIsAnAccidental = note.keyProps[j].accidental && noteHead.x - supposedPosition < 40 && supposedPosition < noteHead.x;
-                        // var thisIsAStem = (Math.abs(supposedPosition - noteHead.x) < 15 && svgPosition.width * 8 < svgPosition.height);
-                        if (noteHead.isDisplaced()) {
-                            console.log();
-                        }
-                        if (((!noteHead.taken && (supposedPosition === parseInt(noteHead.x) 
-                            || (noteHead.isDisplaced() && Math.abs(supposedPosition - noteHead.x) < 15))) // is a !taken note
-                            || thisIsAnAccidental && note.keyProps[j].accidental) // or accidental 
+                        var thisIsAnAccidental = note.keyProps[j].accidental && noteHead.x - supposedPosition < 25 && supposedPosition < noteHead.x;
+                        if (((!noteHead.taken && (Math.abs(supposedPosition - parseInt(noteHead.x)) < 2 // Math.abs adjust for browser error 
+                                        || (noteHead.isDisplaced() && Math.abs(supposedPosition - noteHead.x) < 15))) // or displaced
+                                || thisIsAnAccidental && note.keyProps[j].accidental) // or accidental 
                             && (svgPosition.width > 5 && svgPosition.height > 8 && svgPosition.width * 5 > svgPosition.height)) { // and has note-like dimension
                                 var noteIncrementer = note.keys.length - 1 - j; // !!! note names must be ordered low->high in score file 
                                 if (note.stem_direction == 1) {
@@ -318,6 +314,9 @@ function Score(containingDiv, processingDiv, currentMeasure, end) {
     }
 }
 
+/*
+ * Helper functions for score
+ */
 function note(keys_arg, duration_arg, clef_arg, sd_arg) {
     var note = new vf.StaveNote({ keys: keys_arg, duration: duration_arg, clef: clef_arg, stem_direction: sd_arg});
     for (var i = 0; i < keys_arg.length; i++) {

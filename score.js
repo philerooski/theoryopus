@@ -4,7 +4,6 @@
 // author: Phil Snyder
 
 function View(containingDiv, TABLE_ID) {
-    var annotations = [];
     var mouseDrag = false;
     var currentSelection = [];
     var self = this;
@@ -69,7 +68,8 @@ function View(containingDiv, TABLE_ID) {
             var anchor;
             for (var i = 0; i < notes.length; i++) {
                 var noteData = $(notes[i]).data();
-                if (noteData.clef == clef && noteData.measure == measure && noteData.voice == voice && noteData.index == index) {
+                if (noteData.clef == clef && noteData.measure == parseInt(measure) 
+                    && noteData.voice == parseInt(voice) && noteData.index == parseInt(index)) {
                     anchor = notes[i];
                     break;
                 }
@@ -82,8 +82,14 @@ function View(containingDiv, TABLE_ID) {
                 "index": danchor.index 
             }
             var containingElement = $("#" + clef + "_" + $(anchor).data().line)[0];
-            var listContainer = self.buildAnnotationList(containingElement, anchor, locationData);
-            var list = listContainer.children[0];
+            var list = self.checkForExistingList(locationData);
+            var listContainer;
+            if (!list) {
+                listContainer = self.buildAnnotationList(containingElement, anchor, locationData);
+                list = listContainer.children[0];
+            } else {
+                listContainer = list.parentNode;
+            }
             self.sortByX(listContainer, containingElement);
             var li = self.createLi(text, category);
             var notesSelected = [];
@@ -389,51 +395,34 @@ function View(containingDiv, TABLE_ID) {
             if (areWeGoodToGo()) {
                 $(annotation).remove();
 
-                // are their already annotations beginning on this note?
-                var existingList = function() {
-                    for (var i = 0; i < annotations.length; i++) {
-                        if (locationData.measure == annotations[i].measure
-                                && locationData.clef == annotations[i].clef
-                                && locationData.voice == annotations[i].voice
-                                && locationData.index == annotations[i].index) {
-                                    return annotations[i].list;
-                                }
-                    }
-                    return null;
-                }
 
-                var list = existingList();
-                var listContainer = self.buildAnnotationList(containingElement, firstPath, locationData);
-                if (!list) list = listContainer.children[0];
+                var list = self.checkForExistingList(locationData);
+                var listContainer;
+                if (!list) {
+                    listContainer = self.buildAnnotationList(containingElement, firstPath, locationData);
+                    list = listContainer.children[0];
+                } else {
+                    listContainer = list.parentNode;
+                }
                 self.sortByX(listContainer, containingElement);
                 var note = self.createLi(textarea.value, thisCategory);
                 list.appendChild(note);
                 var indicesSelected = self.assignAnnotationHoverHandlers(note, currentSelection); 
-                indicesSelected = self.removeDuplicates(indicesSelected); // sanity check
-                var ajaxTest = {
-                    "measure": parseInt(locationData.measure),
-                    "voice": parseInt(locationData.voice),
-                    "index": parseInt(locationData.index),
-                }
-                if (ajaxTest.measure == NaN || ajaxTest.voice == NaN || ajaxTest.index == NaN) {
-                    console.log("this note isn't valid");
-                }
-                $.ajax({
-                    type:"POST",
-                    url: "annotations.php",
-                    data: {
-                        "annotation": textarea.value,
-                        "clef": locationData.clef,
-                        "measure": parseInt(locationData.measure),
-                        "voice": parseInt(locationData.voice),
-                        "index": parseInt(locationData.index),
-                        "paths": JSON.stringify(indicesSelected),
-                        "category": thisCategory,
-                        "table": TABLE_ID
-                    },
-                    complete: self.checkAnnotationStatus
-                });  
-
+                indicesSelected = self.removeDuplicates(indicesSelected, 4); // sanity check
+                //$.ajax({
+                //    type:"POST",
+                //    url: "annotations.php",
+                //    data: {
+                //        "annotation": textarea.value,
+                //        "clef": locationData.clef,
+                //        "measure": parseInt(locationData.measure),
+                //        "voice": parseInt(locationData.voice),
+                //        "index": parseInt(locationData.index),
+                //        "paths": JSON.stringify(indicesSelected),
+                //        "category": thisCategory,
+                //        "table": TABLE_ID
+                //    },
+                //});  
                 // sort on screen
                 var theseChildren = containingElement.children;
                 // TODO: Make top/bottom diffentiation more versatile (generalizable across many types of clefs)
@@ -454,6 +443,21 @@ function View(containingDiv, TABLE_ID) {
         });
     }
 
+    // are their already annotations beginning on this note?
+    this.checkForExistingList = function(locationData) {
+        var containers = $(".listannotation");
+        for (var i = 0; i < containers.length; i++) {
+            var data = $(containers[i]).data();
+            if (locationData.measure == data.measure
+                    && locationData.clef == data.clef
+                    && locationData.voice == data.voice
+                    && locationData.index == data.index) {
+                        return containers[i].children[0];
+                    }
+        }
+        return null;
+    }
+    
     this.createLi = function (text, category) {
         var li = document.createElement("li");
         li.innerHTML = text;
@@ -467,9 +471,15 @@ function View(containingDiv, TABLE_ID) {
     this.removeDuplicates = function(array) {
         var noDuplicates = [];
         for (var i = 0; i < array.length; i++) {
-            if (array[i + 1] && array[i] !== array[i + 1]) {
-                noDuplicates.push(array[i]);
-            } else if (!array[i + 1]) {
+            if (array[i + 1]) {
+                var equal = true;
+                for (var key in array[i]) {
+                    if (array[i][key] !== array[i + 1][key]) {
+                        equal = false;
+                    }
+                }
+                if (!equal) noDuplicates.push(array[i]);
+            } else {
                 noDuplicates.push(array[i]);
             }
         }
@@ -488,12 +498,13 @@ function View(containingDiv, TABLE_ID) {
         });
         var indicesSelected = [];
         $(notesSelected).each(function() {
-            var dataObject = {};
             var data = $(this).data();
-            dataObject.clef = data.clef;
-            dataObject.measure = data.measure;
-            dataObject.voice = data.voice;
-            dataObject.index = data.index;
+            var dataObject = {
+                clef: data.clef,
+                measure: data.measure,
+                voice: data.voice,
+                index: data.index
+            };
             indicesSelected.push(dataObject);
             $(this).hover(function() {
                 li.classList.add("annotationhighlight");
@@ -534,18 +545,13 @@ function View(containingDiv, TABLE_ID) {
         listContainer.style.top = parseInt(containingElement.offsetTop) + "px";
         var list = document.createElement("ol");
         listContainer.appendChild(list);
-        locationData.list = list;
-        annotations.push(locationData);
+        $(listContainer).data({
+            clef: locationData.clef,
+            measure: locationData.measure,
+            voice: locationData.voice,
+            index: locationData.index
+        });
         return listContainer;
-    }
-
-    // TODO: for now, debug, but eventually error checking
-    this.checkAnnotationStatus = function(xhr, status) {
-        if (status != "success") {
-            console.log(this.status);	
-        } else {
-            console.log(xhr.responseText);
-        }
     }
 
     // "wraps" annotation wrappers around each other so they don't lie on top of each other
