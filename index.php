@@ -24,7 +24,7 @@ if (!isset($_SERVER["REQUEST_METHOD"]) || $_SERVER["REQUEST_METHOD"] != "GET" ||
 <?php 
     } else {
 ?>
-            <div class="error">Sorry, we don't have that score you requested! But you're welcome to pick another one (If we actually had another one. Teehee)</div>
+            <div class="error">Sorry, we don't have that score you requested! But you're welcome to pick another one - if we actually had another one. Teehee :)</div>
 <?php
         die();
     }

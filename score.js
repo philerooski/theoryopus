@@ -1,6 +1,10 @@
 "use strict";
 
 // handles user interaction with the score
+// 
+// containingDiv: the element on screen which contains the score
+// TABLE_ID: the name of the table on mysql server
+// 
 // author: Phil Snyder
 
 function View(containingDiv, TABLE_ID) {
@@ -25,8 +29,10 @@ function View(containingDiv, TABLE_ID) {
                 + "<li><strong>Primary Time Signature:</strong> " + NUMERICAL_TIME_SIGNATURE + "</li>"
                 + "<li><strong>Total Measures:</strong> " + MEASURE_COUNT + "</li></ul></div>")
             $("body").append("<audio src='http://javanese.imslp.info/files/imglnks/usimg/6/6a/IMSLP110304-PMLP02344-25_Chopin-_Prelude_no._20_in_C_minor.mp3' controls></audio>");
-        // TODO: quit hacking and just type out all the margin and border styles
-        $("#programnotes, #quickfacts").css("width", parseInt($(window).width()/2 - 40)); 
+        $("#programnotes, #quickfacts").css("width", parseInt($(window).width()/2) 
+                    - 2*parseInt($("#programnotes").css("border-width"))
+                    - 2*parseInt($("#programnotes").css("margin-left")) 
+                    - 2*parseInt($("#programnotes").css("padding-left"))); 
     }
     
     this.windowKeyUp = function(e) {
@@ -62,7 +68,9 @@ function View(containingDiv, TABLE_ID) {
             var measure = this.measure;
             var voice = this.voice;
             var index = this.index;
-            // TODO: doing this twice shouldn't be necessary... or is it?
+            /* accidentally json encoded data on client && server side
+             * simple fix, but sample annotations are already encoded with this method (aka Ivegotmoreimportantthingstodo!)
+             */
             var paths = JSON.parse(JSON.parse(this.paths));
             var notes = $("path");        
             var anchor;
@@ -113,7 +121,7 @@ function View(containingDiv, TABLE_ID) {
             var lists = this.children;
             var container = this;
             $(lists).each(function() {
-                if (container.id.indexOf("treble") != -1) {
+                if (container.id.indexOf(CLEFS[0].partName) != -1) {
                     self.adjustAnnotationHeight(this, "bottom");
                 } else {
                     self.adjustAnnotationHeight(this, "top");
@@ -285,7 +293,7 @@ function View(containingDiv, TABLE_ID) {
             }
         }
 
-        // returns an rgb to rgba with half opacity
+        // converts rgb to rgba with half opacity
         var falseColorize = function(element) {
             var fullColor = $(element).css("backgroundColor");
             var falseColor = "rgba" + fullColor.slice(3, fullColor.length - 1) + ", 0.5)";
@@ -340,16 +348,14 @@ function View(containingDiv, TABLE_ID) {
                     + window.pageYOffset) { // if the note lies below its comment box
                         var topOffset = containingElement.offsetTop + containingElement.offsetHeight - $(annotation).height();
                         if (topOffset <= 0) {
-                            // TODO: 200 should not be hard coded
-                            annotation.style.top = containingElement.offsetTop + containingElement.offsetHeight + 200 + "px";
+                            annotation.style.top = containingElement.offsetTop + containingElement.offsetHeight 
+                                + $("#line_0").height()/2 + "px";
                         } else {
                             annotation.style.top = topOffset + "px";
                         }
                     } else {
                         annotation.style.top = containingElement.offsetTop + "px";
                     }
-
-            textarea.focus();
             if (parseInt(firstPath.getBoundingClientRect().left) + parseInt($(annotation).css("width")) > $(window).width()) {
                 annotation.style.left = $(window).width() - parseInt($(annotation).css("width")) - 20 + "px";
             } else {
@@ -360,6 +366,7 @@ function View(containingDiv, TABLE_ID) {
             }, function() {
                 $(annotation).animate({opacity: "0.25"}, 200);
             });
+            textarea.focus();
         }
 
         $(submit).hover(checkForSubmitValidity);
@@ -408,28 +415,27 @@ function View(containingDiv, TABLE_ID) {
                 var note = self.createLi(textarea.value, thisCategory);
                 list.appendChild(note);
                 var indicesSelected = self.assignAnnotationHoverHandlers(note, currentSelection); 
-                indicesSelected = self.removeDuplicates(indicesSelected, 4); // sanity check
-                //$.ajax({
-                //    type:"POST",
-                //    url: "annotations.php",
-                //    data: {
-                //        "annotation": textarea.value,
-                //        "clef": locationData.clef,
-                //        "measure": parseInt(locationData.measure),
-                //        "voice": parseInt(locationData.voice),
-                //        "index": parseInt(locationData.index),
-                //        "paths": JSON.stringify(indicesSelected),
-                //        "category": thisCategory,
-                //        "table": TABLE_ID
-                //    },
-                //});  
+                indicesSelected = self.removeDuplicates(indicesSelected); // sanity check
+                $.ajax({
+                    type:"POST",
+                    url: "annotations.php",
+                    data: {
+                        "annotation": textarea.value,
+                        "clef": locationData.clef,
+                        "measure": parseInt(locationData.measure),
+                        "voice": parseInt(locationData.voice),
+                        "index": parseInt(locationData.index),
+                        "paths": JSON.stringify(indicesSelected),
+                        "category": thisCategory,
+                        "table": TABLE_ID
+                    },
+                });  
                 // sort on screen
                 var theseChildren = containingElement.children;
-                // TODO: Make top/bottom diffentiation more versatile (generalizable across many types of clefs)
                 for (var i = 0; i < theseChildren.length; i++) {
-                    if (locationData.clef == "treble") { 
+                    if (locationData.clef == CLEFS[0].partName) { 
                         self.adjustAnnotationHeight(theseChildren[i], "bottom");
-                    } else if (locationData.clef == "bass") {
+                    } else if (locationData.clef == CLEFS[1].partName) {
                         self.adjustAnnotationHeight(theseChildren[i], "top");
                     }
                 }
@@ -458,6 +464,7 @@ function View(containingDiv, TABLE_ID) {
         return null;
     }
     
+    // creates new colored annotation to append to an annotation group
     this.createLi = function (text, category) {
         var li = document.createElement("li");
         li.innerHTML = text;
@@ -515,6 +522,7 @@ function View(containingDiv, TABLE_ID) {
         return indicesSelected;
     }
 
+    // sorts annotation containers in DOM (pre-sorting for the actual on-screen sort)
     this.sortByX = function(toInsert, containingElement) {
         var children = containingElement.children;
         if (children.length) {
@@ -533,6 +541,7 @@ function View(containingDiv, TABLE_ID) {
             containingElement.appendChild(toInsert);
         }
     }
+    
     /* builds a wrapper for ol that contains annotations
      * containingElement: parent of wrapper
      * anchor: note (<path>) that acts as an anchor and determines position of container
@@ -554,7 +563,7 @@ function View(containingDiv, TABLE_ID) {
         return listContainer;
     }
 
-    // "wraps" annotation wrappers around each other so they don't lie on top of each other
+    // "wraps" annotation wrappers around each other so they don't lie on top of each other (screen sort)
     this.adjustAnnotationHeight = function(wrapper, direction) {
         var containerTop = wrapper.parentNode.offsetTop;
         var containerBottom = containerTop + wrapper.parentNode.offsetHeight;
@@ -608,7 +617,7 @@ function View(containingDiv, TABLE_ID) {
         }
     }
 
-    // pushes annotation wrappers towards either the top or the bottom by a set amount
+    // pushes annotation wrappers towards either the top or the bottom of their respective container
     this.tightWrapAnnotations = function(container) {
         var children = container.children;
         var minHeight = 10000;
@@ -643,6 +652,7 @@ function View(containingDiv, TABLE_ID) {
             });
     }
 
+    // 'loadingcomments' animation
     this.blink = function(item, count) {
         $(item)
             .animate({opacity: '-=1'}, 1000)

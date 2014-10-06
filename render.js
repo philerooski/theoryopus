@@ -1,6 +1,13 @@
 "use strict";
 
 // renders a score notated in js/VexFlow to the user's screen
+// 
+// containingDiv: the element which contains the Score
+// processingDiv: where we temporarily hide the path elements so we can assign
+// data to the paths we have just drawn
+// currentMeasure: the measure to start drawing from
+// end: the measure to end on
+// 
 // author: Phil Snyder
 
 var vf = Vex.Flow;
@@ -18,16 +25,14 @@ function Score(containingDiv, processingDiv, currentMeasure, end) {
     }
     var LINE_WIDTH = parseInt($(window).width() - STAVE.x - STAVE.clefOffset);
     var self = this;
-    // TODO: This code is janky as fuck
+    
     this.initNewStaveLine = function(lineNum) {
-        var i = 0;
         // TODO: instead of lineNum, use $.data to store line number info
         var DisplayCommentLine = function(clef) {
             $(containingDiv).append("<div id='" + clef.partName + "_" + lineNum + "' class='annotationcontainer'></div>");
         }
         DisplayCommentLine(CLEFS[0]);
         $(containingDiv).append("<div id='line_" + lineNum + "'></div>");
-        i++;
         DisplayCommentLine(CLEFS[1]);
         $(containingDiv).append("<hr></hr>"); 
         var paper = document.getElementById("line_" + lineNum);
@@ -56,7 +61,6 @@ function Score(containingDiv, processingDiv, currentMeasure, end) {
         var currentLineMeasure = 0;
         var LineMeasuresVoicesWidth = [];
         var LineMeasuresStaveWidth = [];
-        //TODO: this should really be a constant somewhere
         var lineWidthSoFar = 0;
         var keySigOffset = Vex.Flow.keySignature.keySpecs[KEY_SIGNATURE].num * 10;
         var newLine = this.initNewStaveLine(currentLine);
@@ -78,7 +82,6 @@ function Score(containingDiv, processingDiv, currentMeasure, end) {
                             reservedSpace += STAVE.timeSigOffset;
                         }
                     }
-                    //TODO: does this actually do anything?
                     if (staveDecorations && staveDecorations["m" + measureCount]) {
                         reservedSpace += STAVE.clefOffset;
                     }
@@ -221,7 +224,6 @@ function Score(containingDiv, processingDiv, currentMeasure, end) {
                     var fraction = new vf.Fraction(count, noteType);
                     beams.push(vf.Beam.generateBeams(thisVoice.tickables, {groups: [fraction]}));
                 } else {
-                    // TODO: think of more creative hack </sarcasm>
                     var stemD = 1;
                     if (stemDirections && stemDirections["m" + measure]) {
                         stemD = stemDirections["m" + measure];
@@ -246,7 +248,7 @@ function Score(containingDiv, processingDiv, currentMeasure, end) {
                 });
             });
         }); 
-        // TODO: ties don't work sometimes when beginning measure != 0 && other funky behavior
+        // TODO: ties don't work sometimes when beginning measure != 0 && other funky behavior (probably VexFlow's fault)
         if (decorations && decorations["m" + measure]) {
             var theseDecorations = decorations["m" + measure];
             $(theseDecorations).each(function() {

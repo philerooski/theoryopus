@@ -1,6 +1,7 @@
 <?php
 
 # returns the first paragraph and first thumbnail image from a topics wikipedia page
+# author: Phil Snyder
 
 ini_set("display_errors", "On");
 error_reporting(E_ALL | E_STRICT);
